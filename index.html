@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MCC Cricket Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --bg:#0d0f12;--bg2:#141720;--bg3:#1c2030;--bg4:#242840;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#e8eaf0;--text2:#8b90a0;--text3:#555a6e;
+    --green:#22c55e;--green-bg:rgba(34,197,94,0.1);--green-border:rgba(34,197,94,0.25);
+    --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+    --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
+    --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.1);
+    --accent:#818cf8;--accent-bg:rgba(129,140,248,0.12);--accent-border:rgba(129,140,248,0.3);
+    --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+    --r:10px;--rl:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body,#root{height:100%;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px;}
+
+  .app{display:flex;height:100vh;overflow:hidden;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;}
+  .main{flex:1;overflow-y:auto;padding:32px;}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  .logo-icon{width:36px;height:36px;background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px;}
+  .logo-title{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-0.3px;}
+  .logo-season{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px;}
+  .sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:6px;vertical-align:middle;}
+  .sync-dot.ok{background:var(--green);}
+  .sync-dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+  .sync-dot.err{background:var(--red);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .nav-section{padding:0 12px;margin-bottom:4px;}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 8px 4px;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:13.5px;transition:all .15s;margin-bottom:1px;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-border);}
+  .nav-item .icon{font-size:15px;width:18px;text-align:center;}
+  .season-footer{margin-top:auto;padding:12px 16px 0;border-top:1px solid var(--border);}
+  .season-name{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+  .page-header{margin-bottom:28px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .page-title{font-size:22px;font-weight:600;letter-spacing:-0.5px;}
+  .page-sub{font-size:13.5px;color:var(--text2);margin-top:4px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;}
+  .stat-val{font-size:28px;font-weight:600;letter-spacing:-1px;line-height:1;}
+  .stat-val.green{color:var(--green);}
+  .stat-val.amber{color:var(--amber);}
+  .stat-val.blue{color:var(--blue);}
+  .stat-val.red{color:var(--red);}
+  .stat-lbl{font-size:12px;color:var(--text3);margin-top:6px;font-weight:500;}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:20px;}
+  .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);}
+  .card-body{padding:20px;}
+  table{width:100%;border-collapse:collapse;}
+  th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+  .badge.green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+  .badge.red{background:var(--red-bg);color:var(--red);}
+  .badge.amber{background:var(--amber-bg);color:var(--amber);}
+  .badge.blue{background:var(--blue-bg);color:var(--blue);}
+  .badge.gray{background:var(--bg3);color:var(--text2);}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-primary:hover{background:#6366f1;}
+  .btn-primary:disabled{opacity:.5;cursor:default;}
+  .btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2);}
+  .btn-secondary:hover{background:var(--bg4);}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+  .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,0.25);}
+  .btn-sm{padding:4px 10px;font-size:12px;}
+  input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13.5px;padding:8px 12px;outline:none;transition:border-color .15s;width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+  input::placeholder{color:var(--text3);}
+  select option{background:var(--bg3);}
+  .form-group{margin-bottom:14px;}
+  .form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.04em;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .avail-dot{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .15s;user-select:none;}
+  .avail-dot.yes{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+  .avail-dot.no{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25);}
+  .avail-dot.tbd{background:var(--bg3);color:var(--text3);border-color:var(--border);}
+  .avail-dot:hover{transform:scale(1.15);}
+  .avail-dot.saving{opacity:.5;pointer-events:none;animation:pulse 0.5s infinite;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-size:16px;font-weight:600;}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+  .modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;}
+  .balance-bar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;margin-top:5px;}
+  .balance-fill{height:100%;border-radius:3px;transition:width .3s;}
+  .match-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--r);margin-bottom:7px;border:1px solid var(--border);}
+  .tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:24px;width:fit-content;}
+  .tab-btn{padding:6px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);border:none;background:none;font-family:var(--font);transition:all .15s;}
+  .tab-btn.active{background:var(--bg4);color:var(--text);}
+  .wa-bubble{background:var(--bg3);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;line-height:1.6;color:var(--text);border:1px solid var(--border);max-width:420px;}
+  .wa-time{font-size:11px;color:var(--text3);margin-top:6px;text-align:right;font-family:var(--mono);}
+  .empty{text-align:center;padding:48px 24px;color:var(--text3);}
+  .empty-icon{font-size:36px;margin-bottom:12px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13.5px;color:var(--text);z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;}
+  .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;background:var(--bg);}
+  .spinner{width:36px;height:36px;border:3px solid var(--bg4);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .config-banner{background:var(--amber-bg);border:1px solid rgba(251,191,36,.3);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--amber);line-height:1.7;}
+  .config-banner a{color:var(--amber);font-weight:600;}
+  .player-avail-page{max-width:480px;margin:0 auto;padding:24px 16px;}
+  .pa-header{text-align:center;padding:24px 0 32px;}
+  .pa-title{font-size:24px;font-weight:600;margin-bottom:6px;}
+  .pa-sub{color:var(--text2);font-size:14px;}
+  .pa-match{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:12px;}
+  .pa-round{font-weight:600;font-size:15px;}
+  .pa-date{font-size:12px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+  .pa-btns{display:flex;gap:8px;margin-top:12px;}
+  .pa-btn{flex:1;padding:9px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all .15s;}
+  .pa-btn.yes{background:var(--green-bg);border-color:var(--green-border);color:var(--green);}
+  .pa-btn.no{background:var(--red-bg);border-color:rgba(248,113,113,.25);color:var(--red);}
+  @media(max-width:768px){.sidebar{display:none;}.main{padding:16px;}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ─── CONFIG — paste your Apps Script URL here after deploying ───
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS4PeVD-k-Sgiy79vq9hgNaKhwOujg81C6p94IgfkgWjjwMG2fR2uCKjXE_CErwgta/exec";
+const IS_CONFIGURED   = APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+// ─── API helpers ────────────────────────────────────────────────
+const api = {
+  get: async (params) => {
+    const url = APPS_SCRIPT_URL + "?" + new URLSearchParams(params);
+    const r = await fetch(url);
+    const j = await r.json();
+    if (j.status === "error") throw new Error(j.data?.error || "API error");
+    return j.data;
+  },
+  post: async (body) => {
+    const r = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (j.status === "error") throw new Error(j.data?.error || "API error");
+    return j.data;
+  },
+};
+
+// ─── UTILS ──────────────────────────────────────────────────────
+const fmt = (d) => { if (!d) return "—"; const s = d.toString().slice(0,10); return new Date(s + "T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"short"}); };
+const fmtFull = (d) => { if (!d) return ""; const s = d.toString().slice(0,10); return new Date(s+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); };
+const totalCost = (m) => ["GroundHire","Balls","Umpire","MatchFee","Extras"].reduce((s,k) => s + (Number(m[k])||0), 0);
+const uid = () => "id_" + Math.random().toString(36).slice(2,9);
+const urlParams = new URLSearchParams(window.location.search);
+
+// ─── PLAYER AVAILABILITY PAGE ────────────────────────────────────
+function PlayerAvailPage({ playerId, matchLabel }) {
+  const [data, setData] = useState(null);
+  const [saving, setSaving] = useState({});
+  const [done, setDone] = useState({});
+  const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!IS_CONFIGURED) { setErr("App not configured yet."); return; }
+    api.get({ action: "getPlayerData", playerId })
+      .then(setData)
+      .catch(e => setErr(e.message));
+  }, [playerId]);
+
+  const setStatus = async (matchId, status) => {
+    setSaving(s => ({...s, [matchId]: true}));
+    try {
+      await api.post({ action: "setAvailability", playerId, matchId, status });
+      setData(d => {
+        const av = { ...(d.availability || {}) };
+        if (!av[matchId]) av[matchId] = {};
+        av[matchId][playerId] = status;
+        return { ...d, availability: av };
+      });
+      setDone(s => ({...s, [matchId]: true}));
+    } catch(e) { alert("Save failed: " + e.message); }
+    finally { setSaving(s => ({...s, [matchId]: false})); }
+  };
+
+  if (err) return <div className="loading-screen"><div style={{color:"var(--red)",fontSize:14}}>{err}</div></div>;
+  if (!data) return <div className="loading-screen"><div className="spinner"/><div style={{color:"var(--text2)",fontSize:13}}>Loading your matches…</div></div>;
+
+  const { player, matches, availability, config } = data;
+  const sorted = [...matches].sort((a,b) => (a.Date||"").toString().localeCompare((b.Date||"").toString()));
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = sorted.filter(m => (m.Date||"").toString().slice(0,10) >= today);
+
+  return <div className="player-avail-page">
+    <div className="pa-header">
+      <div className="logo-icon" style={{margin:"0 auto 12px",width:48,height:48,fontSize:24}}>🏏</div>
+      <div className="pa-title">{config?.ClubName || "MCC"} Cricket</div>
+      <div className="pa-sub">Hey {player.Name.split(" ")[0]}, mark your availability for {config?.SeasonName || "this season"}</div>
+    </div>
+    {upcoming.length === 0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">No upcoming matches — you're all done!</div></div>}
+    {upcoming.map(m => {
+      const mid = m.MatchID;
+      const cur = (availability[mid] || {})[playerId] || "tbd";
+      return <div key={mid} className="pa-match">
+        <div className="pa-round">{m.Round}{m.Opponent ? ` vs ${m.Opponent}` : ""}</div>
+        <div className="pa-date">{fmtFull(m.Date)}{m.Venue ? ` · ${m.Venue}` : ""}</div>
+        <div className="pa-btns">
+          <button className={"pa-btn" + (cur==="yes" ? " yes" : "")} onClick={() => setStatus(mid,"yes")} disabled={saving[mid]}>
+            {saving[mid] ? "…" : done[mid] && cur==="yes" ? "✓ I'm in!" : "✓ I'm in"}
+          </button>
+          <button className={"pa-btn" + (cur==="no" ? " no" : "")} onClick={() => setStatus(mid,"no")} disabled={saving[mid]}>
+            {saving[mid] ? "…" : done[mid] && cur==="no" ? "✕ Can't make it" : "✕ Can't make it"}
+          </button>
+        </div>
+        {cur !== "tbd" && !saving[mid] && <div style={{fontSize:11,color:"var(--text3)",marginTop:8,textAlign:"center"}}>
+          Saved as <span style={{color: cur==="yes" ? "var(--green)" : "var(--red)",fontWeight:600}}>{cur==="yes" ? "available" : "unavailable"}</span> · tap to change
+        </div>}
+      </div>;
+    })}
+    <div style={{fontSize:11,color:"var(--text3)",textAlign:"center",marginTop:24,lineHeight:1.7}}>
+      MCC Cricket Manager · Changes save instantly
+    </div>
+  </div>;
+}
+
+// ─── TOAST ──────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, []);
+  return <div className="toast">✓ {msg}</div>;
+}
+
+// ─── MODAL ──────────────────────────────────────────────────────
+function Modal({ title, children, footer, onClose }) {
+  return <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal">
+      <div className="modal-header"><span className="modal-title">{title}</span><button className="modal-close" onClick={onClose}>×</button></div>
+      <div className="modal-body">{children}</div>
+      {footer && <div className="modal-footer">{footer}</div>}
+    </div>
+  </div>;
+}
+
+// ─── CONFIG BANNER ───────────────────────────────────────────────
+function ConfigBanner() {
+  if (IS_CONFIGURED) return null;
+  return <div className="config-banner">
+    <strong>⚠ Not connected to Google Sheets yet.</strong><br/>
+    The app is running in demo mode. Follow the setup guide to connect your sheet, then paste your Apps Script URL at the top of this file as <code>APPS_SCRIPT_URL</code>.
+  </div>;
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────
+function Dashboard({ data, syncStatus }) {
+  const { players=[], matches=[], availability={}, payments={} } = data;
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = matches.filter(m => (m.Date||"").toString().slice(0,10) >= today).sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString()));
+  const past = matches.filter(m => (m.Date||"").toString().slice(0,10) < today);
+  const nextMatch = upcoming[0];
+  const nextAvail = nextMatch ? Object.values(availability[nextMatch.MatchID] || {}).filter(v=>v==="yes").length : 0;
+
+  const playerStats = players.map(p => {
+    const pid = p.PlayerID;
+    const paid = (payments[pid]||[]).reduce((s,x)=>s+Number(x.Amount||0),0);
+    let owed = 0;
+    matches.forEach(m => {
+      if ((availability[m.MatchID]||{})[pid]==="yes") {
+        const cnt = Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+        owed += cnt > 0 ? totalCost(m)/cnt : 0;
+      }
+    });
+    return { ...p, paid, owed, balance: paid-owed };
+  });
+
+  const totalOutstanding = playerStats.reduce((s,p) => s+(p.balance<0?Math.abs(p.balance):0), 0);
+  const debtorCount = playerStats.filter(p=>p.balance<-0.5).length;
+
+  return <div>
+    <div className="page-header">
+      <div><div className="page-title">Dashboard <span className={"sync-dot " + syncStatus}/></div><div className="page-sub">{data.config?.SeasonName || "Season"} overview</div></div>
+    </div>
+    <div className="stat-grid">
+      <div className="stat-card"><div className="stat-val blue">{players.filter(p=>p.Active==="Yes"||p.Active===true).length}</div><div className="stat-lbl">Active players</div></div>
+      <div className="stat-card"><div className="stat-val">{past.length}/{matches.length}</div><div className="stat-lbl">Games played</div></div>
+      <div className="stat-card"><div className="stat-val amber">{debtorCount}</div><div className="stat-lbl">Unpaid balances</div></div>
+      <div className="stat-card"><div className="stat-val red">${totalOutstanding.toFixed(0)}</div><div className="stat-lbl">Total outstanding</div></div>
+    </div>
+    {nextMatch && <div className="card" style={{marginBottom:20,borderColor:"var(--accent-border)"}}>
+      <div className="card-header"><span className="card-title">⚡ Next match</span><span className="badge blue">{upcoming.length} remaining</span></div>
+      <div className="card-body">
+        <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
+          <div><div style={{fontSize:20,fontWeight:600}}>{nextMatch.Round}</div><div style={{color:"var(--text2)",fontSize:13,marginTop:2}}>{fmtFull(nextMatch.Date)}</div></div>
+          {nextMatch.Opponent && <div><div style={{fontSize:12,color:"var(--text3)",marginBottom:2}}>vs</div><div style={{fontWeight:600}}>{nextMatch.Opponent}</div></div>}
+          {nextMatch.Venue && <div><div style={{fontSize:12,color:"var(--text3)",marginBottom:2}}>Venue</div><div style={{fontWeight:500}}>{nextMatch.Venue}</div></div>}
+          <div><div style={{fontSize:12,color:"var(--text3)",marginBottom:2}}>Confirmed</div>
+            <div style={{fontWeight:600,color:nextAvail>=9?"var(--green)":nextAvail>=7?"var(--amber)":"var(--red)"}}>{nextAvail} players</div></div>
+        </div>
+      </div>
+    </div>}
+    <div className="card">
+      <div className="card-header"><span className="card-title">Season schedule</span></div>
+      <div style={{padding:"12px 14px"}}>
+        {matches.slice(0,10).sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString())).map(m=>{
+          const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+          const isPast=(m.Date||"").toString().slice(0,10)<today;
+          return <div key={m.MatchID} className="match-row">
+            <div style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--text2)",width:82,flexShrink:0}}>{fmt(m.Date)}</div>
+            <div style={{flex:1}}><div style={{fontWeight:600}}>{m.Round}</div>{m.Opponent&&<div style={{fontSize:12,color:"var(--text3)"}}>vs {m.Opponent}</div>}</div>
+            {isPast?<span className="badge gray">played</span>:<span className="badge" style={{background:y>=9?"var(--green-bg)":"var(--amber-bg)",color:y>=9?"var(--green)":"var(--amber)"}}>{y} avail</span>}
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── SEASON SETUP ───────────────────────────────────────────────
+function SeasonSetup({ data, reload, notify }) {
+  const { players=[], matches=[], config={} } = data;
+  const [tab, setTab] = useState("players");
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showAddMatch, setShowAddMatch] = useState(false);
+  const [showNewSeason, setShowNewSeason] = useState(false);
+  const [pForm, setPForm] = useState({Name:"",Phone:"",Role:"Batsman",Active:"Yes"});
+  const [mForm, setMForm] = useState({Date:"",Round:"",Venue:"",Opponent:""});
+  const [nsName, setNsName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const savePlayer = async () => {
+    if (!pForm.Name.trim()) return;
+    setSaving(true);
+    try {
+      await api.post({ action:"addPlayer", player:{ PlayerID: uid(), ...pForm }});
+      notify("Player added"); setShowAddPlayer(false); reload();
+    } catch(e) { alert(e.message); } finally { setSaving(false); }
+  };
+
+  const saveMatch = async () => {
+    if (!mForm.Date || !mForm.Round) return;
+    setSaving(true);
+    try {
+      await api.post({ action:"addMatch", match:{ MatchID: uid(), ...mForm }});
+      notify("Match added"); setShowAddMatch(false); reload();
+    } catch(e) { alert(e.message); } finally { setSaving(false); }
+  };
+
+  const createSeason = async () => {
+    if (!nsName.trim()) return;
+    setSaving(true);
+    try {
+      await api.post({ action:"createSeason", seasonName: nsName });
+      notify("New season created — players carried over!"); setShowNewSeason(false); reload();
+    } catch(e) { alert(e.message); } finally { setSaving(false); }
+  };
+
+  const roles = ["Batsman","Bowler","All-rounder","Wicketkeeper","Opener"];
+
+  return <div>
+    <div className="page-header">
+      <div><div className="page-title">Season Setup</div><div className="page-sub">Manage players, schedule, and seasons</div></div>
+      <button className="btn btn-secondary btn-sm" onClick={()=>setShowNewSeason(true)}>+ New Season</button>
+    </div>
+    <div className="tabs">
+      {["players","schedule","config"].map(t=><button key={t} className={"tab-btn"+(tab===t?" active":"")} onClick={()=>setTab(t)}>{t.charAt(0).toUpperCase()+t.slice(1)}</button>)}
+    </div>
+
+    {tab==="players"&&<div className="card">
+      <div className="card-header"><span className="card-title">Players ({players.length})</span><button className="btn btn-primary btn-sm" onClick={()=>{setPForm({Name:"",Phone:"",Role:"Batsman",Active:"Yes"});setShowAddPlayer(true);}}>+ Add Player</button></div>
+      <table><thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Active</th></tr></thead><tbody>
+        {players.map(p=><tr key={p.PlayerID}>
+          <td style={{fontWeight:500}}>{p.Name}</td>
+          <td style={{fontFamily:"var(--mono)",fontSize:12,color:p.Phone?"var(--text2)":"var(--text3)"}}>{p.Phone||"—"}</td>
+          <td><span className="badge gray">{p.Role||"—"}</span></td>
+          <td><span className={"badge "+(p.Active==="Yes"||p.Active===true?"green":"red")}>{p.Active==="Yes"||p.Active===true?"Active":"Inactive"}</span></td>
+        </tr>)}
+      </tbody></table>
+    </div>}
+
+    {tab==="schedule"&&<div className="card">
+      <div className="card-header"><span className="card-title">Schedule ({matches.length} matches)</span><button className="btn btn-primary btn-sm" onClick={()=>{setMForm({Date:"",Round:"",Venue:"",Opponent:""});setShowAddMatch(true);}}>+ Add Match</button></div>
+      <table><thead><tr><th>Date</th><th>Round</th><th>Venue</th><th>Opponent</th></tr></thead><tbody>
+        {[...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString())).map(m=><tr key={m.MatchID}>
+          <td style={{fontFamily:"var(--mono)",fontSize:12}}>{fmt(m.Date)}</td>
+          <td style={{fontWeight:500}}>{m.Round}</td>
+          <td style={{color:m.Venue?"var(--text)":"var(--text3)"}}>{m.Venue||"—"}</td>
+          <td style={{color:m.Opponent?"var(--text)":"var(--text3)"}}>{m.Opponent||"—"}</td>
+        </tr>)}
+      </tbody></table>
+    </div>}
+
+    {tab==="config"&&<div className="card"><div className="card-header"><span className="card-title">Season config</span></div>
+      <div className="card-body">
+        <div style={{fontSize:13,color:"var(--text2)",marginBottom:16}}>These values are stored in your Google Sheet's Config tab and used across the app and WhatsApp messages.</div>
+        {Object.entries(config).length===0&&<div style={{color:"var(--text3)",fontSize:13}}>No config loaded. Make sure your sheet is connected.</div>}
+        {Object.entries(config).map(([k,v])=><div key={k} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+          <span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--text2)",width:180,flexShrink:0}}>{k}</span>
+          <span style={{fontWeight:500}}>{v||"—"}</span>
+        </div>)}
+      </div>
+    </div>}
+
+    {showAddPlayer&&<Modal title="Add Player" onClose={()=>setShowAddPlayer(false)} footer={<><button className="btn btn-secondary" onClick={()=>setShowAddPlayer(false)}>Cancel</button><button className="btn btn-primary" onClick={savePlayer} disabled={saving}>{saving?"Saving…":"Add Player"}</button></>}>
+      <div className="form-group"><label className="form-label">Name *</label><input value={pForm.Name} onChange={e=>setPForm(f=>({...f,Name:e.target.value}))} placeholder="Player name"/></div>
+      <div className="form-group"><label className="form-label">Phone (for WhatsApp)</label><input value={pForm.Phone} onChange={e=>setPForm(f=>({...f,Phone:e.target.value}))} placeholder="+61 4xx xxx xxx"/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Role</label><select value={pForm.Role} onChange={e=>setPForm(f=>({...f,Role:e.target.value}))}>{roles.map(r=><option key={r}>{r}</option>)}</select></div>
+        <div className="form-group"><label className="form-label">Status</label><select value={pForm.Active} onChange={e=>setPForm(f=>({...f,Active:e.target.value}))}><option value="Yes">Active</option><option value="No">Inactive</option></select></div>
+      </div>
+    </Modal>}
+
+    {showAddMatch&&<Modal title="Add Match" onClose={()=>setShowAddMatch(false)} footer={<><button className="btn btn-secondary" onClick={()=>setShowAddMatch(false)}>Cancel</button><button className="btn btn-primary" onClick={saveMatch} disabled={saving}>{saving?"Saving…":"Add Match"}</button></>}>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Date *</label><input type="date" value={mForm.Date} onChange={e=>setMForm(f=>({...f,Date:e.target.value}))}/></div>
+        <div className="form-group"><label className="form-label">Round *</label><input value={mForm.Round} onChange={e=>setMForm(f=>({...f,Round:e.target.value}))} placeholder="e.g. Round 1, Final"/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Venue</label><input value={mForm.Venue} onChange={e=>setMForm(f=>({...f,Venue:e.target.value}))} placeholder="Ground name"/></div>
+      <div className="form-group"><label className="form-label">Opposition</label><input value={mForm.Opponent} onChange={e=>setMForm(f=>({...f,Opponent:e.target.value}))} placeholder="Opponent team"/></div>
+    </Modal>}
+
+    {showNewSeason&&<Modal title="Start New Season" onClose={()=>setShowNewSeason(false)} footer={<><button className="btn btn-secondary" onClick={()=>setShowNewSeason(false)}>Cancel</button><button className="btn btn-primary" onClick={createSeason} disabled={saving}>{saving?"Creating…":"Create Season"}</button></>}>
+      <div style={{fontSize:13,color:"var(--text2)",marginBottom:16,lineHeight:1.7}}>This will clear the schedule, availability, and payments in your sheet, keeping your player list. The sheet gets a fresh start for the new season.</div>
+      <div className="form-group"><label className="form-label">Season name *</label><input value={nsName} onChange={e=>setNsName(e.target.value)} placeholder="e.g. Summer 2026 / Winter 2026"/></div>
+    </Modal>}
+  </div>;
+}
+
+// ─── AVAILABILITY ─────────────────────────────────────────────
+function Availability({ data, reload, notify }) {
+  const { players=[], matches=[], availability={}, config={} } = data;
+  const [saving, setSaving] = useState({});
+  const today = new Date().toISOString().slice(0,10);
+  const sorted = [...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString()));
+  const upcoming = sorted.filter(m=>(m.Date||"").toString().slice(0,10)>=today);
+
+  const toggle = async (matchId, playerId) => {
+    const key = matchId+"_"+playerId;
+    const cur = (availability[matchId]||{})[playerId]||"tbd";
+    const next = cur==="tbd"?"yes":cur==="yes"?"no":"tbd";
+    setSaving(s=>({...s,[key]:true}));
+    try {
+      await api.post({ action:"setAvailability", playerId, matchId, status:next });
+      reload();
+    } catch(e) { alert("Save failed: "+e.message); }
+    finally { setSaving(s=>({...s,[key]:false})); }
+  };
+
+  const baseUrl = window.location.href.split("?")[0];
+
+  const copyLink = (p) => {
+    const link = `${baseUrl}?player=${p.PlayerID}`;
+    navigator.clipboard.writeText(link).catch(()=>{});
+    notify(`Link copied for ${p.Name}`);
+  };
+
+  const copyGroupMessage = () => {
+    const baseUrl2 = window.location.href.split("?")[0];
+    const lines = players.filter(p=>p.Active==="Yes"||p.Active===true).map(p=>
+      `${p.Name}: ${baseUrl2}?player=${p.PlayerID}`
+    );
+    const msg = `Hey team 🏏\n\nPlease mark your availability for the upcoming ${config?.SeasonName||"season"} using your personal link below. Takes 30 seconds!\n\n${lines.join("\n")}\n\nPlease respond by end of week. Cheers!`;
+    navigator.clipboard.writeText(msg).catch(()=>{});
+    notify("Full group message copied — paste into WhatsApp!");
+  };
+
+  return <div>
+    <div className="page-header">
+      <div><div className="page-title">Availability</div><div className="page-sub">Click a dot to toggle · sync to Google Sheet is live</div></div>
+    </div>
+
+    <div className="card" style={{marginBottom:20,borderColor:"var(--green-border)"}}>
+      <div className="card-header"><span className="card-title" style={{color:"var(--green)"}}>📱 Send availability links to players</span></div>
+      <div className="card-body">
+        <div style={{fontSize:13,color:"var(--text2)",marginBottom:16,lineHeight:1.7}}>Each player gets a personal link. They open it on their phone, tap Yes/No for each game, and it saves directly to your Google Sheet.</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
+          <button className="btn btn-primary" onClick={copyGroupMessage}>📋 Copy full WhatsApp message (all players)</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+          {players.filter(p=>p.Active==="Yes"||p.Active===true).map(p=><div key={p.PlayerID} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"var(--bg3)",padding:"8px 12px",borderRadius:8,gap:8}}>
+            <span style={{fontWeight:500,fontSize:13}}>{p.Name}</span>
+            <button className="btn btn-ghost btn-sm" onClick={()=>copyLink(p)}>🔗 Link</button>
+          </div>)}
+        </div>
+      </div>
+    </div>
+
+    <div className="card">
+      <div className="card-header"><span className="card-title">Availability grid</span></div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{minWidth:700}}>
+          <thead><tr>
+            <th style={{minWidth:130,position:"sticky",left:0,background:"var(--bg2)"}}>Player</th>
+            {upcoming.slice(0,10).map(m=>{
+              const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+              return <th key={m.MatchID} style={{textAlign:"center",minWidth:64}}>
+                <div style={{fontSize:10}}>{m.Round}</div>
+                <div style={{fontSize:10,fontWeight:400,color:"var(--text3)"}}>{fmt(m.Date)}</div>
+                <div style={{fontSize:10,marginTop:2,color:y>=9?"var(--green)":y>=7?"var(--amber)":"var(--text3)"}}>{y}✓</div>
+              </th>;
+            })}
+          </tr></thead>
+          <tbody>
+            {players.filter(p=>p.Active==="Yes"||p.Active===true).map(p=><tr key={p.PlayerID}>
+              <td style={{fontWeight:500,position:"sticky",left:0,background:"var(--bg2)",whiteSpace:"nowrap"}}>{p.Name}</td>
+              {upcoming.slice(0,10).map(m=>{
+                const key=m.MatchID+"_"+p.PlayerID;
+                const val=(availability[m.MatchID]||{})[p.PlayerID]||"tbd";
+                return <td key={m.MatchID} style={{textAlign:"center",padding:"6px"}} onClick={()=>toggle(m.MatchID,p.PlayerID)}>
+                  <div className={"avail-dot "+val+(saving[key]?" saving":"")}>{val==="yes"?"✓":val==="no"?"✕":"?"}</div>
+                </td>;
+              })}
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── TEAM SELECTION ──────────────────────────────────────────────
+function TeamSelection({ data, notify }) {
+  const { players=[], matches=[], availability={} } = data;
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = [...matches].filter(m=>(m.Date||"").toString().slice(0,10)>=today).sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString()));
+  const [selMatch, setSelMatch] = useState(upcoming[0]?.MatchID||matches[0]?.MatchID||"");
+  const [xi, setXI] = useState([]);
+
+  const match = matches.find(m=>m.MatchID===selMatch);
+  const available = players.filter(p=>(availability[selMatch]||{})[p.PlayerID]==="yes");
+  const tbd = players.filter(p=>!((availability[selMatch]||{})[p.PlayerID])||((availability[selMatch]||{})[p.PlayerID])==="tbd");
+
+  useEffect(()=>{ setXI(available.slice(0,11).map(p=>p.PlayerID)); },[selMatch]);
+
+  const toggleXI = id => setXI(prev=>prev.includes(id)?prev.filter(x=>x!==id):prev.length<11?[...prev,id]:prev);
+
+  const copyTeam = () => {
+    if (!match) return;
+    const names = players.filter(p=>xi.includes(p.PlayerID)).map(p=>p.Name);
+    const text = `MCC XI — ${match.Round} (${fmt(match.Date)})\n\n${names.map((n,i)=>`${i+1}. ${n}`).join("\n")}\n\nSent from MCC Cricket Manager`;
+    navigator.clipboard.writeText(text).catch(()=>{});
+    notify("Team list copied!");
+  };
+
+  const rc = r => !r?"gray":r.includes("Bat")||r.includes("Open")?"blue":r.includes("Bowl")?"red":r.includes("Keep")?"amber":"green";
+
+  return <div>
+    <div className="page-header">
+      <div><div className="page-title">Team Selection</div><div className="page-sub">Pick your XI from available players</div></div>
+      <select value={selMatch} onChange={e=>setSelMatch(e.target.value)} style={{width:"auto",padding:"7px 12px"}}>
+        {[...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString())).map(m=><option key={m.MatchID} value={m.MatchID}>{m.Round} — {fmt(m.Date)}</option>)}
+      </select>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+      <div className="card">
+        <div className="card-header"><span className="card-title" style={{color:"var(--green)"}}>Available ({available.length})</span><span style={{fontSize:12,color:"var(--text3)"}}>{xi.length}/11 selected</span></div>
+        <div style={{padding:"8px 12px"}}>
+          {available.length===0&&<div className="empty"><div className="empty-icon">🏏</div><div className="empty-text">No availability marked yet</div></div>}
+          {available.map(p=>{const inXI=xi.includes(p.PlayerID);return <div key={p.PlayerID} onClick={()=>toggleXI(p.PlayerID)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 10px",borderRadius:8,cursor:"pointer",marginBottom:4,background:inXI?"var(--accent-bg)":"var(--bg3)",border:inXI?"1px solid var(--accent-border)":"1px solid var(--border)"}}>
+            <div style={{width:22,height:22,borderRadius:"50%",background:inXI?"var(--accent)":"var(--bg4)",color:inXI?"white":"var(--text3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:600,flexShrink:0}}>{inXI?xi.indexOf(p.PlayerID)+1:""}</div>
+            <span style={{fontWeight:inXI?600:400,flex:1}}>{p.Name}</span>
+            <span className={"badge "+rc(p.Role)} style={{fontSize:10}}>{p.Role||"?"}</span>
+          </div>;})}
+        </div>
+      </div>
+      <div>
+        <div className="card" style={{marginBottom:14}}>
+          <div className="card-header"><span className="card-title">Selected XI</span><button className="btn btn-ghost btn-sm" onClick={copyTeam}>Copy 📋</button></div>
+          <div style={{padding:"8px 12px"}}>
+            {xi.length===0&&<div style={{color:"var(--text3)",padding:"12px 4px",fontSize:13}}>Click players on the left to build your XI</div>}
+            {xi.map((id,i)=>{const p=players.find(x=>x.PlayerID===id);if(!p)return null;return <div key={id} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:8,marginBottom:3,background:"var(--bg3)"}}>
+              <span style={{fontSize:12,fontFamily:"var(--mono)",color:"var(--accent)",width:18}}>{i+1}.</span>
+              <span style={{fontWeight:500,flex:1}}>{p.Name}</span>
+              <span className={"badge "+rc(p.Role)} style={{fontSize:10}}>{p.Role||"?"}</span>
+            </div>;})}
+          </div>
+        </div>
+        {tbd.length>0&&<div className="card">
+          <div className="card-header"><span className="card-title" style={{color:"var(--text3)"}}>TBD ({tbd.length})</span></div>
+          <div style={{padding:"8px 12px"}}>{tbd.map(p=><div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 4px",borderBottom:"1px solid var(--border)",fontSize:13}}><span style={{color:"var(--text3)",fontSize:12}}>?</span><span>{p.Name}</span></div>)}</div>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── FINANCE ─────────────────────────────────────────────────────
+function Finance({ data, reload, notify }) {
+  const { players=[], matches=[], availability={}, payments={} } = data;
+  const [tab, setTab] = useState("costs");
+  const [editMatch, setEditMatch] = useState(null);
+  const [costForm, setCostForm] = useState({});
+  const [addPayment, setAddPayment] = useState(null);
+  const [payForm, setPayForm] = useState({amount:"",date:new Date().toISOString().slice(0,10),note:""});
+  const [saving, setSaving] = useState(false);
+
+  const playerStats = players.map(p=>{
+    const pid=p.PlayerID;
+    const paid=(payments[pid]||[]).reduce((s,x)=>s+Number(x.Amount||0),0);
+    let owed=0;
+    matches.forEach(m=>{
+      if((availability[m.MatchID]||{})[pid]==="yes"){
+        const cnt=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+        owed+=cnt>0?totalCost(m)/cnt:0;
+      }
+    });
+    const gp=matches.filter(m=>(availability[m.MatchID]||{})[pid]==="yes").length;
+    return {...p,paid,owed,balance:paid-owed,gamesPlayed:gp};
+  });
+
+  const totalCosts=matches.reduce((s,m)=>s+totalCost(m),0);
+  const totalCollected=playerStats.reduce((s,p)=>s+p.paid,0);
+  const totalOutstanding=playerStats.reduce((s,p)=>s+(p.balance<0?Math.abs(p.balance):0),0);
+
+  const saveCosts = async () => {
+    if (!editMatch) return;
+    setSaving(true);
+    try {
+      await api.post({ action:"updateMatchCosts", matchId:editMatch.MatchID, costs:{
+        groundHire:Number(costForm.groundHire)||0, balls:Number(costForm.balls)||0,
+        umpire:Number(costForm.umpire)||0, matchFee:Number(costForm.matchFee)||0, extras:Number(costForm.extras)||0
+      }});
+      notify("Costs saved to sheet"); setEditMatch(null); reload();
+    } catch(e) { alert(e.message); } finally { setSaving(false); }
+  };
+
+  const savePayment = async () => {
+    if (!payForm.amount||isNaN(payForm.amount)) return;
+    setSaving(true);
+    try {
+      await api.post({ action:"addPayment", playerId:addPayment.PlayerID, amount:Number(payForm.amount), date:payForm.date, note:payForm.note });
+      notify(`$${payForm.amount} recorded for ${addPayment.Name}`); setAddPayment(null); reload();
+    } catch(e) { alert(e.message); } finally { setSaving(false); }
+  };
+
+  return <div>
+    <div className="page-header"><div><div className="page-title">Finance</div><div className="page-sub">Game costs, player payments, and balances — all synced to your sheet</div></div></div>
+    <div className="stat-grid">
+      <div className="stat-card"><div className="stat-val blue">${totalCosts.toFixed(0)}</div><div className="stat-lbl">Total season costs</div></div>
+      <div className="stat-card"><div className="stat-val green">${totalCollected.toFixed(0)}</div><div className="stat-lbl">Total collected</div></div>
+      <div className="stat-card"><div className="stat-val red">${totalOutstanding.toFixed(0)}</div><div className="stat-lbl">Outstanding</div></div>
+      <div className="stat-card"><div className="stat-val amber">{playerStats.filter(p=>p.balance<-0.5).length}</div><div className="stat-lbl">Players in debt</div></div>
+    </div>
+    <div className="tabs">{["costs","players"].map(t=><button key={t} className={"tab-btn"+(tab===t?" active":"")} onClick={()=>setTab(t)}>{t==="costs"?"Game costs":"Player balances"}</button>)}</div>
+
+    {tab==="costs"&&<div className="card">
+      <div className="card-header"><span className="card-title">Game costs</span></div>
+      <table><thead><tr><th>Date</th><th>Round</th><th>Players</th><th>Ground</th><th>Balls</th><th>Umpire</th><th>Match fee</th><th>Extras</th><th>Total</th><th>Per player</th><th></th></tr></thead><tbody>
+        {[...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString())).map(m=>{
+          const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+          const tc=totalCost(m);
+          const cpp=y>0?tc/y:0;
+          const num = n => n?`$${Number(n).toFixed(0)}`:"—";
+          return <tr key={m.MatchID}>
+            <td style={{fontFamily:"var(--mono)",fontSize:12}}>{fmt(m.Date)}</td>
+            <td style={{fontWeight:500}}>{m.Round}</td>
+            <td style={{textAlign:"center"}}><span className="badge gray">{y}</span></td>
+            <td>{num(m.GroundHire)}</td><td>{num(m.Balls)}</td><td>{num(m.Umpire)}</td><td>{num(m.MatchFee)}</td><td>{num(m.Extras)}</td>
+            <td style={{fontWeight:600,color:tc>0?"var(--text)":"var(--text3)"}}>{tc>0?`$${tc.toFixed(0)}`:"—"}</td>
+            <td style={{fontFamily:"var(--mono)",color:"var(--accent)"}}>{cpp>0?`$${cpp.toFixed(2)}`:"—"}</td>
+            <td><button className="btn btn-ghost btn-sm" onClick={()=>{setCostForm({groundHire:m.GroundHire||0,balls:m.Balls||0,umpire:m.Umpire||0,matchFee:m.MatchFee||0,extras:m.Extras||0});setEditMatch(m);}}>Edit</button></td>
+          </tr>;
+        })}
+      </tbody></table>
+    </div>}
+
+    {tab==="players"&&<div className="card">
+      <div className="card-header"><span className="card-title">Player balances</span></div>
+      <table><thead><tr><th>Player</th><th>Games</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead><tbody>
+        {playerStats.map(p=>{
+          const bal=p.balance;
+          const pct=p.owed>0?Math.min(100,(p.paid/p.owed)*100):100;
+          return <tr key={p.PlayerID}>
+            <td style={{fontWeight:500}}>{p.Name}</td>
+            <td><span className="badge gray">{p.gamesPlayed}</span></td>
+            <td>${p.owed.toFixed(2)}</td>
+            <td style={{color:"var(--green)"}}>${p.paid.toFixed(2)}</td>
+            <td><span style={{color:bal>=0?"var(--green)":"var(--red)",fontWeight:600,fontFamily:"var(--mono)"}}>{bal>=0?"+":""}{bal.toFixed(2)}</span><div className="balance-bar"><div className="balance-fill" style={{width:pct+"%",background:bal>=0?"var(--green)":"var(--amber)"}}/></div></td>
+            <td>{bal>=0?<span className="badge green">Settled</span>:<span className="badge red">Owes ${Math.abs(bal).toFixed(0)}</span>}</td>
+            <td><button className="btn btn-primary btn-sm" onClick={()=>{setAddPayment(p);setPayForm({amount:"",date:new Date().toISOString().slice(0,10),note:""});}}>+ Pay</button></td>
+          </tr>;
+        })}
+      </tbody></table>
+    </div>}
+
+    {editMatch&&<Modal title={"Edit costs — "+editMatch.Round} onClose={()=>setEditMatch(null)} footer={<><button className="btn btn-secondary" onClick={()=>setEditMatch(null)}>Cancel</button><button className="btn btn-primary" onClick={saveCosts} disabled={saving}>{saving?"Saving…":"Save to Sheet"}</button></>}>
+      <div className="form-row">
+        {[["groundHire","Ground hire"],["balls","Balls"],["umpire","Umpire"],["matchFee","Match fee"],["extras","Extras"]].map(([k,lbl])=><div key={k} className="form-group"><label className="form-label">{lbl}</label><input type="number" min="0" value={costForm[k]||0} onChange={e=>setCostForm(f=>({...f,[k]:e.target.value}))}/></div>)}
+      </div>
+      <div style={{background:"var(--bg3)",borderRadius:8,padding:"10px 14px",marginTop:4,display:"flex",justifyContent:"space-between",fontSize:13}}>
+        <span style={{color:"var(--text2)"}}>Total</span>
+        <span style={{fontWeight:600,fontFamily:"var(--mono)"}}>${ Object.values(costForm).reduce((s,v)=>s+Number(v||0),0).toFixed(2)}</span>
+      </div>
+    </Modal>}
+
+    {addPayment&&<Modal title={"Record payment — "+addPayment.Name} onClose={()=>setAddPayment(null)} footer={<><button className="btn btn-secondary" onClick={()=>setAddPayment(null)}>Cancel</button><button className="btn btn-primary" onClick={savePayment} disabled={saving}>{saving?"Saving…":"Save to Sheet"}</button></>}>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Amount ($) *</label><input type="number" min="0" value={payForm.amount} onChange={e=>setPayForm(f=>({...f,amount:e.target.value}))} placeholder="0.00"/></div>
+        <div className="form-group"><label className="form-label">Date</label><input type="date" value={payForm.date} onChange={e=>setPayForm(f=>({...f,date:e.target.value}))}/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Note</label><input value={payForm.note} onChange={e=>setPayForm(f=>({...f,note:e.target.value}))} placeholder="e.g. Bank transfer, Cash"/></div>
+    </Modal>}
+  </div>;
+}
+
+// ─── WHATSAPP ─────────────────────────────────────────────────────
+function WhatsApp({ data, notify }) {
+  const { players=[], matches=[], availability={}, payments={}, config={} } = data;
+  const [tab, setTab] = useState("reminder");
+  const [selMatch, setSelMatch] = useState(matches[0]?.MatchID||"");
+  const [copied, setCopied] = useState(null);
+
+  const today = new Date().toISOString().slice(0,10);
+  const match = matches.find(m=>m.MatchID===selMatch);
+
+  const playerStats = players.map(p=>{
+    const pid=p.PlayerID;
+    const paid=(payments[pid]||[]).reduce((s,x)=>s+Number(x.Amount||0),0);
+    let owed=0;
+    matches.forEach(m=>{ if((availability[m.MatchID]||{})[pid]==="yes"){const cnt=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;owed+=cnt>0?totalCost(m)/cnt:0;} });
+    const gp=matches.filter(m=>(availability[m.MatchID]||{})[pid]==="yes").length;
+    return {...p,paid,owed,balance:paid-owed,gamesPlayed:gp};
+  });
+
+  const baseUrl = window.location.href.split("?")[0];
+  const avail = match ? players.filter(p=>(availability[match.MatchID]||{})[p.PlayerID]==="yes") : [];
+  const tbd   = match ? players.filter(p=>!((availability[match.MatchID]||{})[p.PlayerID])||(availability[match.MatchID]||{})[p.PlayerID]==="tbd") : [];
+  const debtors = playerStats.filter(p=>p.balance<-0.5);
+
+  const cp = (text, key) => { navigator.clipboard.writeText(text).catch(()=>{}); setCopied(key); setTimeout(()=>setCopied(null),2500); notify("Copied!"); };
+
+  const reminderMsg = p => !match?"":
+    `Hey ${p.Name.split(" ")[0]} 🏏\n\nReminder: *${match.Round}* is *${fmtFull(match.Date)}*${match.Venue?` at ${match.Venue}`:""}${match.Opponent?` vs ${match.Opponent}`:""}.\n\nYou're in the squad — reply CONFIRM to lock in or let us know if plans change.\n\nSee you on the field! 🟢`;
+
+  const chaseMsg = p => !match?"":
+    `Hey ${p.Name.split(" ")[0]},\n\nYou haven't marked your availability for *${match.Round}* (${fmtFull(match.Date)})${match.Opponent?` vs ${match.Opponent}`:""}.\n\nTap your link to respond: ${baseUrl}?player=${p.PlayerID}\n\nNeeds to be done by Wednesday! Cheers 🏏`;
+
+  const payMsg = p =>
+    `Hey ${p.Name.split(" ")[0]},\n\nQuick cricket fees update 💰\n\nGames played: *${p.gamesPlayed}*\nTotal owed: *$${p.owed.toFixed(2)}*\nPaid so far: *$${p.paid.toFixed(2)}*\n*Balance due: $${Math.abs(p.balance).toFixed(2)}*\n\nPlease transfer:\nBSB: ${config.BankBSB||"XXX-XXX"}\nAcc: ${config.BankAccount||"XXXXXXXXX"}\nRef: ${p.Name.replace(" ","").toUpperCase()}\n\nThanks! 🙏`;
+
+  const scriptCode = `// Google Apps Script — paste into script.google.com
+// Set trigger: Time-driven → Every Monday → 9am (payment reminders)
+// Set trigger: Time-driven → Every Thursday → 8am (game reminders)
+
+const SHEET_ID    = "YOUR_SHEET_ID";
+const TWILIO_SID  = "YOUR_TWILIO_SID";
+const TWILIO_AUTH = "YOUR_TWILIO_TOKEN";
+const TWILIO_FROM = "whatsapp:+14155238886"; // Twilio sandbox number
+const WEB_APP_URL = "${APPS_SCRIPT_URL}";
+
+function weeklyPaymentReminders() {
+  const res  = UrlFetchApp.fetch(WEB_APP_URL + "?action=getAll");
+  const data = JSON.parse(res.getContentText()).data;
+  data.players.forEach(p => {
+    if (!p.Phone || p.Active !== "Yes") return;
+    const paid = (data.payments[p.PlayerID] || [])
+      .reduce((s, x) => s + Number(x.Amount || 0), 0);
+    let owed = 0;
+    data.matches.forEach(m => {
+      if ((data.availability[m.MatchID] || {})[p.PlayerID] === "yes") {
+        const cnt = Object.values(data.availability[m.MatchID] || {})
+          .filter(v => v === "yes").length;
+        owed += cnt > 0 ? ([m.GroundHire,m.Balls,m.Umpire,m.MatchFee,m.Extras]
+          .reduce((s,v)=>s+Number(v||0),0)) / cnt : 0;
+      }
+    });
+    const balance = paid - owed;
+    if (balance < -1) {
+      const msg = \`Hey \${p.Name.split(" ")[0]}, your MCC balance is $\${Math.abs(balance).toFixed(2)}. BSB: \${data.config.BankBSB} Acc: \${data.config.BankAccount} Ref: \${p.Name.replace(" ","").toUpperCase()}. Thanks!\`;
+      sendWA(p.Phone, msg);
+    }
+  });
+}
+
+function sendWA(to, body) {
+  UrlFetchApp.fetch(
+    \`https://api.twilio.com/2010-04-01/Accounts/\${TWILIO_SID}/Messages.json\`,
+    { method:"post",
+      headers:{ Authorization:"Basic "+Utilities.base64Encode(TWILIO_SID+":"+TWILIO_AUTH) },
+      payload:{ To:"whatsapp:"+to, From:TWILIO_FROM, Body:body }
+    }
+  );
+}`;
+
+  return <div>
+    <div className="page-header"><div><div className="page-title">WhatsApp</div><div className="page-sub">Message templates personalised from your live sheet data</div></div></div>
+    <div className="tabs">{["reminder","chase","payment","scripts"].map(t=><button key={t} className={"tab-btn"+(tab===t?" active":"")} onClick={()=>setTab(t)}>
+      {t==="reminder"?"Game reminder":t==="chase"?"Availability chase":t==="payment"?"Payment reminder":"Automation scripts"}
+    </button>)}</div>
+
+    {(tab==="reminder"||tab==="chase")&&<>
+      <div className="form-group" style={{marginBottom:20}}>
+        <label className="form-label">Select match</label>
+        <select value={selMatch} onChange={e=>setSelMatch(e.target.value)} style={{width:320}}>
+          {[...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString())).map(m=><option key={m.MatchID} value={m.MatchID}>{m.Round} — {fmt(m.Date)}</option>)}
+        </select>
+      </div>
+      {tab==="reminder"&&<>
+        <div style={{fontSize:13,color:"var(--text2)",marginBottom:16}}>For <strong style={{color:"var(--text)"}}>{avail.length} confirmed players</strong></div>
+        {avail.length===0&&<div className="empty"><div className="empty-icon">📱</div><div className="empty-text">No confirmed players for this match yet</div></div>}
+        {avail.map(p=>{const msg=reminderMsg(p);return <div key={p.PlayerID} className="card" style={{marginBottom:10}}>
+          <div className="card-header">
+            <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontWeight:600}}>{p.Name}</span>{p.Phone?<span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--text3)"}}>{p.Phone}</span>:<span className="badge amber">No phone</span>}</div>
+            <button className="btn btn-ghost btn-sm" onClick={()=>cp(msg,"r"+p.PlayerID)}>{copied==="r"+p.PlayerID?"✓ Copied":"Copy 📋"}</button>
+          </div>
+          <div className="card-body"><div className="wa-bubble" style={{whiteSpace:"pre-wrap"}}>{msg}<div className="wa-time">now</div></div></div>
+        </div>;})}
+      </>}
+      {tab==="chase"&&<>
+        <div style={{fontSize:13,color:"var(--text2)",marginBottom:16}}>Chasing <strong style={{color:"var(--text)"}}>{tbd.length} players</strong> who haven't responded</div>
+        {tbd.length===0&&<div className="empty"><div className="empty-icon">✅</div><div className="empty-text">Everyone has responded!</div></div>}
+        {tbd.map(p=>{const msg=chaseMsg(p);return <div key={p.PlayerID} className="card" style={{marginBottom:10}}>
+          <div className="card-header">
+            <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontWeight:600}}>{p.Name}</span>{!p.Phone&&<span className="badge amber">No phone</span>}</div>
+            <button className="btn btn-ghost btn-sm" onClick={()=>cp(msg,"c"+p.PlayerID)}>{copied==="c"+p.PlayerID?"✓ Copied":"Copy 📋"}</button>
+          </div>
+          <div className="card-body"><div className="wa-bubble" style={{whiteSpace:"pre-wrap"}}>{msg}<div className="wa-time">now</div></div></div>
+        </div>;})}
+      </>}
+    </>}
+
+    {tab==="payment"&&<>
+      <div style={{fontSize:13,color:"var(--text2)",marginBottom:16}}><strong style={{color:"var(--text)"}}>{debtors.length} players</strong> have outstanding balances</div>
+      {debtors.length===0&&<div className="empty"><div className="empty-icon">💰</div><div className="empty-text">Everyone is paid up!</div></div>}
+      {debtors.map(p=>{const msg=payMsg(p);return <div key={p.PlayerID} className="card" style={{marginBottom:10}}>
+        <div className="card-header">
+          <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontWeight:600}}>{p.Name}</span><span className="badge red">Owes ${Math.abs(p.balance).toFixed(0)}</span>{!p.Phone&&<span className="badge amber">No phone</span>}</div>
+          <button className="btn btn-ghost btn-sm" onClick={()=>cp(msg,"p"+p.PlayerID)}>{copied==="p"+p.PlayerID?"✓ Copied":"Copy 📋"}</button>
+        </div>
+        <div className="card-body"><div className="wa-bubble" style={{whiteSpace:"pre-wrap"}}>{msg}<div className="wa-time">now</div></div></div>
+      </div>;})}
+    </>}
+
+    {tab==="scripts"&&<>
+      <div style={{background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:10,padding:"14px 18px",marginBottom:16,fontSize:13,color:"var(--text2)",lineHeight:1.8}}>
+        <strong style={{color:"var(--text)",display:"block",marginBottom:6}}>Full automation setup</strong>
+        1. Sign up at <a href="https://twilio.com" target="_blank" style={{color:"var(--accent)"}}>twilio.com</a> → enable WhatsApp sandbox (free)<br/>
+        2. Add <code style={{fontFamily:"var(--mono)",color:"var(--accent)"}}>TwilioSID</code>, <code style={{fontFamily:"var(--mono)",color:"var(--accent)"}}>TwilioToken</code>, <code style={{fontFamily:"var(--mono)",color:"var(--accent)"}}>TwilioFrom</code> rows to your Google Sheet Config tab<br/>
+        3. The Apps Script backend (<code>Code.gs</code>) already has the automation built in — just set triggers
+      </div>
+      <div className="card">
+        <div className="card-header"><span className="card-title" style={{fontFamily:"var(--mono)",fontSize:12}}>Weekly trigger script</span><button className="btn btn-ghost btn-sm" onClick={()=>cp(scriptCode,"sc")}>{copied==="sc"?"✓ Copied":"Copy"}</button></div>
+        <div className="card-body"><pre style={{fontFamily:"var(--mono)",fontSize:11.5,color:"var(--text2)",lineHeight:1.6,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{scriptCode}</pre></div>
+      </div>
+    </>}
+  </div>;
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────
+function App() {
+  // Check if this is a player availability page
+  const playerParam = urlParams.get("player");
+  if (playerParam) {
+    return <PlayerAvailPage playerId={playerParam}/>;
+  }
+
+  const [view, setView] = useState("dashboard");
+  const [data, setData] = useState({ players:[], matches:[], availability:{}, payments:{}, config:{} });
+  const [syncStatus, setSyncStatus] = useState(IS_CONFIGURED ? "loading" : "err");
+  const [loading, setLoading] = useState(IS_CONFIGURED);
+  const [toast, setToast] = useState(null);
+  const notify = msg => setToast(msg);
+
+  const loadData = useCallback(async () => {
+    if (!IS_CONFIGURED) return;
+    setSyncStatus("loading");
+    try {
+      const d = await api.get({ action:"getAll" });
+      setData(d);
+      setSyncStatus("ok");
+    } catch(e) {
+      console.error(e);
+      setSyncStatus("err");
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  if (loading) return <div className="loading-screen">
+    <div className="spinner"/>
+    <div style={{color:"var(--text2)",fontSize:13}}>Loading from Google Sheets…</div>
+  </div>;
+
+  const navItems = [
+    {id:"dashboard",icon:"◉",label:"Dashboard",sec:"main"},
+    {id:"setup",icon:"⚙",label:"Season Setup",sec:"main"},
+    {id:"availability",icon:"✓",label:"Availability",sec:"manage"},
+    {id:"team",icon:"🏏",label:"Team Selection",sec:"manage"},
+    {id:"finance",icon:"$",label:"Finance",sec:"manage"},
+    {id:"whatsapp",icon:"💬",label:"WhatsApp",sec:"manage"},
+  ];
+
+  return <div className="app">
+    <div className="sidebar">
+      <div className="logo">
+        <div className="logo-icon">🏏</div>
+        <div className="logo-title">MCC Cricket <span className={"sync-dot "+(IS_CONFIGURED?syncStatus:"err")}/></div>
+        <div className="logo-season">{data.config?.SeasonName||"Not connected"}</div>
+      </div>
+      {["main","manage"].map(sec=><div key={sec} className="nav-section">
+        <div className="nav-label">{sec}</div>
+        {navItems.filter(n=>n.sec===sec).map(n=><div key={n.id} className={"nav-item"+(view===n.id?" active":"")} onClick={()=>setView(n.id)}>
+          <span className="icon">{n.icon}</span>{n.label}
+        </div>)}
+      </div>)}
+      <div className="season-footer">
+        <div className="season-name">{data.config?.ClubName||"MCC"} · {data.config?.SeasonName||"—"}</div>
+        {IS_CONFIGURED?<div style={{fontSize:11,color:syncStatus==="ok"?"var(--green)":syncStatus==="loading"?"var(--amber)":"var(--red)"}}>
+          {syncStatus==="ok"?"● Live":syncStatus==="loading"?"● Syncing…":"● Disconnected"}
+        </div>:<div style={{fontSize:11,color:"var(--amber)"}}>⚠ Demo mode</div>}
+      </div>
+    </div>
+    <div className="main">
+      <ConfigBanner/>
+      {view==="dashboard"&&<Dashboard data={data} syncStatus={syncStatus}/>}
+      {view==="setup"&&<SeasonSetup data={data} reload={loadData} notify={notify}/>}
+      {view==="availability"&&<Availability data={data} reload={loadData} notify={notify}/>}
+      {view==="team"&&<TeamSelection data={data} notify={notify}/>}
+      {view==="finance"&&<Finance data={data} reload={loadData} notify={notify}/>}
+      {view==="whatsapp"&&<WhatsApp data={data} notify={notify}/>}
+    </div>
+    {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
