@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MCA Cricket Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg2: #141720;
+    --bg3: #1c2030;
+    --bg4: #242840;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --text2: #8b90a0;
+    --text3: #555a6e;
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.1);
+    --green-border: rgba(34,197,94,0.25);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.1);
+    --blue-border: rgba(96,165,250,0.25);
+    --accent: #818cf8;
+    --accent-bg: rgba(129,140,248,0.12);
+    --accent-border: rgba(129,140,248,0.3);
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+
+  /* Layout */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; }
+  .main { flex: 1; overflow-y: auto; padding: 32px; }
+
+  /* Sidebar */
+  .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent-bg); border: 1px solid var(--accent-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 8px; }
+  .logo-title { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .logo-season { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 1px; }
+  .nav-section { padding: 0 12px; margin-bottom: 4px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; padding: 8px 8px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--text2); font-size: 13.5px; font-weight: 400; transition: all .15s; margin-bottom: 1px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+  .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+  .season-switcher { margin-top: auto; padding: 16px 16px 0; border-top: 1px solid var(--border); }
+  .season-select { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 10px; cursor: pointer; outline: none; }
+  .season-select:focus { border-color: var(--accent); }
+  .season-select option { background: var(--bg3); }
+
+  /* Page header */
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
+  .page-sub { font-size: 13.5px; color: var(--text2); margin-top: 4px; }
+
+  /* Cards & grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .stat-val { font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  .stat-val.green { color: var(--green); }
+  .stat-val.amber { color: var(--amber); }
+  .stat-val.blue { color: var(--blue); }
+  .stat-val.red { color: var(--red); }
+  .stat-lbl { font-size: 12px; color: var(--text3); margin-top: 6px; font-weight: 500; }
+
+  /* Table */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-body { padding: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge.red { background: var(--red-bg); color: var(--red); }
+  .badge.amber { background: var(--amber-bg); color: var(--amber); }
+  .badge.blue { background: var(--blue-bg); color: var(--blue); }
+  .badge.gray { background: var(--bg3); color: var(--text2); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; border: none; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6366f1; }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+  .btn-secondary:hover { background: var(--bg4); border-color: var(--border2); }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+  .btn-danger:hover { background: rgba(248,113,113,0.2); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  /* Inputs */
+  input, select, textarea { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13.5px; padding: 8px 12px; outline: none; transition: border-color .15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--bg3); }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .04em; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* Availability grid */
+  .avail-grid { overflow-x: auto; }
+  .avail-table { min-width: 800px; }
+  .avail-table th { white-space: nowrap; font-size: 10px; }
+  .avail-cell { text-align: center; cursor: pointer; user-select: none; }
+  .avail-dot { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; transition: all .15s; cursor: pointer; border: 1.5px solid transparent; }
+  .avail-dot.yes { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .avail-dot.no { background: var(--red-bg); color: var(--red); border-color: rgba(248,113,113,0.25); }
+  .avail-dot.tbd { background: var(--bg3); color: var(--text3); border-color: var(--border); }
+  .avail-dot:hover { transform: scale(1.15); }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px; }
+  .modal-close:hover { color: var(--text); }
+
+  /* Finance */
+  .balance-bar { height: 6px; border-radius: 3px; background: var(--bg3); overflow: hidden; margin-top: 6px; }
+  .balance-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+  /* Schedule */
+  .match-row { display: flex; align-items: center; gap: 16px; padding: 14px 16px; background: var(--bg3); border-radius: var(--radius); margin-bottom: 8px; border: 1px solid var(--border); transition: border-color .15s; }
+  .match-row:hover { border-color: var(--border2); }
+  .match-date { font-family: var(--mono); font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; }
+  .match-round { font-weight: 600; font-size: 14px; color: var(--text); flex: 1; }
+  .match-detail { font-size: 12px; color: var(--text3); }
+  .match-count { font-size: 12px; color: var(--text2); margin-left: auto; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; margin-bottom: 24px; width: fit-content; }
+  .tab-btn { padding: 6px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); border: none; background: none; font-family: var(--font); transition: all .15s; }
+  .tab-btn.active { background: var(--bg4); color: var(--text); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* Whatsapp preview */
+  .wa-bubble { background: var(--bg3); border-radius: 12px 12px 12px 2px; padding: 12px 14px; font-size: 13px; line-height: 1.6; color: var(--text); border: 1px solid var(--border); max-width: 400px; }
+  .wa-time { font-size: 11px; color: var(--text3); margin-top: 6px; text-align: right; font-family: var(--mono); }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 48px 24px; color: var(--text3); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* Notification */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 16px; font-size: 13.5px; color: var(--text); z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transform: translateY(0); transition: all .3s; display: flex; align-items: center; gap: 8px; }
+  .progress-bar { height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .1s; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ─── STORAGE HELPERS ───────────────────────────────────────────
+const STORE_KEY = 'mca_cricket_v1';
+const loadData = () => {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || null; } catch { return null; }
+};
+const saveData = (d) => localStorage.setItem(STORE_KEY, JSON.stringify(d));
+
+// ─── DEFAULT DATA ───────────────────────────────────────────────
+const defaultSeason = {
+  id: 'winter2026',
+  name: 'Winter 2026',
+  created: '2026-01-01'
+};
+
+const defaultPlayers = [
+  { id: 'p1', name: 'Pavan', phone: '', role: 'Batsman', active: true },
+  { id: 'p2', name: 'Girish', phone: '', role: 'Bowler', active: true },
+  { id: 'p3', name: 'Viva', phone: '', role: 'All-rounder', active: true },
+  { id: 'p4', name: 'Rohit', phone: '', role: 'Batsman', active: true },
+  { id: 'p5', name: 'Harish', phone: '', role: 'Wicketkeeper', active: true },
+  { id: 'p6', name: 'Harshal', phone: '', role: 'Bowler', active: true },
+  { id: 'p7', name: 'Adi', phone: '', role: 'All-rounder', active: true },
+  { id: 'p8', name: 'Satish M', phone: '', role: 'Batsman', active: true },
+  { id: 'p9', name: 'Sid', phone: '', role: 'Batsman', active: true },
+  { id: 'p10', name: 'Shriram', phone: '', role: 'Bowler', active: true },
+  { id: 'p11', name: 'Chidu', phone: '', role: 'All-rounder', active: true },
+  { id: 'p12', name: 'Mourya', phone: '', role: 'Batsman', active: true },
+  { id: 'p13', name: 'Srini', phone: '', role: 'Bowler', active: true },
+  { id: 'p14', name: 'Shaffi', phone: '', role: 'All-rounder', active: true },
+  { id: 'p15', name: 'Rajesh', phone: '', role: 'Batsman', active: true },
+  { id: 'p16', name: 'Prashanth', phone: '', role: 'Bowler', active: true },
+];
+
+const defaultMatches = [
+  { id: 'm1', date: '2025-04-11', round: 'Round 1', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm2', date: '2025-04-18', round: 'Round 2', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm3', date: '2025-04-25', round: 'Round 3', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm4', date: '2025-05-02', round: 'Round 4', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm5', date: '2025-05-09', round: 'Round 5', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm6', date: '2025-05-16', round: 'Round 6', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm7', date: '2025-05-23', round: 'Round 7', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm8', date: '2025-05-30', round: 'Round 8', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm9', date: '2025-06-13', round: 'Round 9', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm10', date: '2025-06-20', round: 'Round 10', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm11', date: '2025-06-27', round: 'Round 11', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm12', date: '2025-07-04', round: 'Round 12', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm13', date: '2025-07-11', round: 'Round 13', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm14', date: '2025-07-18', round: 'Round 14', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm15', date: '2025-07-25', round: 'Round 15', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm16', date: '2025-08-01', round: 'Round 16', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm17', date: '2025-08-08', round: 'PSF', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm18', date: '2025-08-15', round: 'Semi Final', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+  { id: 'm19', date: '2025-08-22', round: 'Final', venue: '', opponent: '', groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', playerCount: 0 },
+];
+
+// availability: { matchId: { playerId: 'yes'|'no'|'tbd' } }
+// payments: { playerId: [{ id, matchId, amount, date, note }] }
+
+const initApp = () => {
+  const saved = loadData();
+  if (saved) return saved;
+  return {
+    seasons: [defaultSeason],
+    activeSeason: defaultSeason.id,
+    seasonData: {
+      [defaultSeason.id]: {
+        players: defaultPlayers,
+        matches: defaultMatches,
+        availability: {},
+        payments: {},
+      }
+    }
+  };
+};
+
+// ─── HELPERS ────────────────────────────────────────────────────
+const fmt = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+const fmtFull = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+const totalCost = (m) => (m.groundHire || 0) + (m.balls || 0) + (m.umpire || 0) + (m.matchFee || 0) + (m.extras || 0);
+const costPerPlayer = (m, count) => count > 0 ? totalCost(m) / count : 0;
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+// ─── TOAST ──────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  const [pct, setPct] = useState(100);
+  useEffect(() => {
+    const t = setInterval(() => setPct(p => { if (p <= 0) { clearInterval(t); onDone(); return 0; } return p - 3.33; }), 100);
+    return () => clearInterval(t);
+  }, []);
+  return <div className="toast">✓ {msg}<div className="progress-bar"><div className="progress-fill" style={{ width: pct + '%' }}/></div></div>;
+}
+
+// ─── MODAL ──────────────────────────────────────────────────────
+function Modal({ title, children, footer, onClose }) {
+  return <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal">
+      <div className="modal-header">
+        <span className="modal-title">{title}</span>
+        <button className="modal-close" onClick={onClose}>×</button>
+      </div>
+      <div className="modal-body">{children}</div>
+      {footer && <div className="modal-footer">{footer}</div>}
+    </div>
+  </div>;
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────
+function Dashboard({ players, matches, availability, payments }) {
+  const today = new Date();
+  const upcoming = matches.filter(m => new Date(m.date + 'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = matches.filter(m => new Date(m.date + 'T00:00:00') < today);
+  const nextMatch = upcoming[0];
+
+  const totalOwed = players.reduce((sum, p) => {
+    const paid = (payments[p.id] || []).reduce((s, x) => s + x.amount, 0);
+    const owed = matches.reduce((s, m) => {
+      const av = (availability[m.id] || {})[p.id];
+      if (av === 'yes') {
+        const cnt = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+        return s + costPerPlayer(m, cnt);
+      }
+      return s;
+    }, 0);
+    const bal = paid - owed;
+    return sum + (bal < 0 ? Math.abs(bal) : 0);
+  }, 0);
+
+  const playersInDebt = players.filter(p => {
+    const paid = (payments[p.id] || []).reduce((s, x) => s + x.amount, 0);
+    const owed = matches.reduce((s, m) => {
+      const av = (availability[m.id] || {})[p.id];
+      if (av === 'yes') {
+        const cnt = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+        return s + costPerPlayer(m, cnt);
+      }
+      return s;
+    }, 0);
+    return paid < owed;
+  }).length;
+
+  const nextAvail = nextMatch ? Object.values(availability[nextMatch.id] || {}).filter(v => v === 'yes').length : 0;
+
+  return <div>
+    <div className="page-header">
+      <div className="page-title">Dashboard</div>
+      <div className="page-sub">Season overview at a glance</div>
+    </div>
+
+    <div className="stat-grid">
+      <div className="stat-card">
+        <div className="stat-val blue">{players.filter(p => p.active).length}</div>
+        <div className="stat-lbl">Active players</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-val">{past.length} / {matches.length}</div>
+        <div className="stat-lbl">Games played</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-val amber">{playersInDebt}</div>
+        <div className="stat-lbl">Players with balance due</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-val red">${totalOwed.toFixed(0)}</div>
+        <div className="stat-lbl">Total outstanding</div>
+      </div>
+    </div>
+
+    {nextMatch && <div className="card" style={{ marginBottom: 20, borderColor: 'var(--accent-border)' }}>
+      <div className="card-header">
+        <span className="card-title">⚡ Next match</span>
+        <span className="badge blue">{upcoming.length} to go</span>
+      </div>
+      <div className="card-body">
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div><div style={{ fontSize: 20, fontWeight: 600 }}>{nextMatch.round}</div><div style={{ color: 'var(--text2)', fontSize: 13, marginTop: 2 }}>{fmtFull(nextMatch.date)}</div></div>
+          {nextMatch.opponent && <div><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 2 }}>vs</div><div style={{ fontWeight: 600 }}>{nextMatch.opponent}</div></div>}
+          {nextMatch.venue && <div><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 2 }}>Venue</div><div style={{ fontWeight: 500 }}>{nextMatch.venue}</div></div>}
+          <div><div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 2 }}>Confirmed available</div>
+            <div style={{ fontWeight: 600 }}><span style={{ color: nextAvail >= 9 ? 'var(--green)' : nextAvail >= 7 ? 'var(--amber)' : 'var(--red)' }}>{nextAvail}</span> players</div>
+          </div>
+        </div>
+      </div>
+    </div>}
+
+    <div className="card">
+      <div className="card-header"><span className="card-title">Recent & upcoming matches</span></div>
+      <div style={{ padding: '12px 16px' }}>
+        {matches.slice(0, 8).map(m => {
+          const yesCount = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+          const isPast = new Date(m.date + 'T00:00:00') < today;
+          return <div key={m.id} className="match-row">
+            <div className="match-date">{fmt(m.date)}</div>
+            <div style={{ flex: 1 }}>
+              <div className="match-round">{m.round}</div>
+              {m.opponent && <div className="match-detail">vs {m.opponent}</div>}
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              {isPast ? <span className="badge gray">played</span> : <span className="badge" style={{ background: yesCount >= 9 ? 'var(--green-bg)' : 'var(--amber-bg)', color: yesCount >= 9 ? 'var(--green)' : 'var(--amber)' }}>{yesCount} avail</span>}
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── SEASON SETUP ──────────────────────────────────────────────
+function SeasonSetup({ appData, setAppData, notify, activeSeason }) {
+  const sd = appData.seasonData[activeSeason];
+  const [tab, setTab] = useState('players');
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showAddMatch, setShowAddMatch] = useState(false);
+  const [editPlayer, setEditPlayer] = useState(null);
+  const [editMatch, setEditMatch] = useState(null);
+  const [newSeason, setNewSeason] = useState({ name: '', startDate: '' });
+  const [showNewSeason, setShowNewSeason] = useState(false);
+  const [pForm, setPForm] = useState({ name: '', phone: '', role: 'Batsman', active: true });
+  const [mForm, setMForm] = useState({ date: '', round: '', venue: '', opponent: '' });
+
+  const updateSD = (fn) => {
+    setAppData(prev => {
+      const next = { ...prev, seasonData: { ...prev.seasonData, [activeSeason]: fn(prev.seasonData[activeSeason]) } };
+      saveData(next); return next;
+    });
+  };
+
+  const savePlayer = () => {
+    if (!pForm.name.trim()) return;
+    if (editPlayer) {
+      updateSD(sd => ({ ...sd, players: sd.players.map(p => p.id === editPlayer.id ? { ...p, ...pForm } : p) }));
+      notify('Player updated');
+    } else {
+      updateSD(sd => ({ ...sd, players: [...sd.players, { id: uid(), ...pForm }] }));
+      notify('Player added');
+    }
+    setShowAddPlayer(false); setEditPlayer(null); setPForm({ name: '', phone: '', role: 'Batsman', active: true });
+  };
+
+  const removePlayer = (id) => {
+    updateSD(sd => ({ ...sd, players: sd.players.filter(p => p.id !== id) }));
+    notify('Player removed');
+  };
+
+  const saveMatch = () => {
+    if (!mForm.date || !mForm.round) return;
+    if (editMatch) {
+      updateSD(sd => ({ ...sd, matches: sd.matches.map(m => m.id === editMatch.id ? { ...m, ...mForm } : m) }));
+      notify('Match updated');
+    } else {
+      updateSD(sd => ({ ...sd, matches: [...sd.matches, { id: uid(), groundHire: 0, balls: 0, umpire: 0, matchFee: 0, extras: 0, result: '', ...mForm }] }));
+      notify('Match added');
+    }
+    setShowAddMatch(false); setEditMatch(null); setMForm({ date: '', round: '', venue: '', opponent: '' });
+  };
+
+  const openEditPlayer = (p) => { setPForm({ name: p.name, phone: p.phone || '', role: p.role || 'Batsman', active: p.active !== false }); setEditPlayer(p); setShowAddPlayer(true); };
+  const openEditMatch = (m) => { setMForm({ date: m.date, round: m.round, venue: m.venue || '', opponent: m.opponent || '' }); setEditMatch(m); setShowAddMatch(true); };
+
+  const createSeason = () => {
+    if (!newSeason.name.trim()) return;
+    const id = 'season_' + uid();
+    const season = { id, name: newSeason.name, created: newSeason.startDate || new Date().toISOString().slice(0,10) };
+    setAppData(prev => {
+      const next = {
+        ...prev,
+        seasons: [...prev.seasons, season],
+        activeSeason: id,
+        seasonData: { ...prev.seasonData, [id]: { players: sd.players.map(p => ({ ...p })), matches: [], availability: {}, payments: {} } }
+      };
+      saveData(next); return next;
+    });
+    setShowNewSeason(false); setNewSeason({ name: '', startDate: '' });
+    notify('New season created — players carried over!');
+  };
+
+  const roles = ['Batsman', 'Bowler', 'All-rounder', 'Wicketkeeper', 'Opener'];
+
+  return <div>
+    <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div>
+        <div className="page-title">Season Setup</div>
+        <div className="page-sub">Manage players, schedule, and seasons</div>
+      </div>
+      <button className="btn btn-secondary btn-sm" onClick={() => setShowNewSeason(true)}>+ New Season</button>
+    </div>
+
+    <div className="tabs">
+      {['players','schedule'].map(t => <button key={t} className={'tab-btn' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>)}
+    </div>
+
+    {tab === 'players' && <>
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Players ({sd.players.length})</span>
+          <button className="btn btn-primary btn-sm" onClick={() => { setPForm({ name: '', phone: '', role: 'Batsman', active: true }); setEditPlayer(null); setShowAddPlayer(true); }}>+ Add Player</button>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {sd.players.map(p => <tr key={p.id}>
+              <td style={{ fontWeight: 500 }}>{p.name}</td>
+              <td style={{ fontFamily: 'var(--mono)', fontSize: 12, color: p.phone ? 'var(--text2)' : 'var(--text3)' }}>{p.phone || '—'}</td>
+              <td><span className="badge gray">{p.role || '—'}</span></td>
+              <td><span className={'badge ' + (p.active !== false ? 'green' : 'red')}>{p.active !== false ? 'Active' : 'Inactive'}</span></td>
+              <td><div style={{ display: 'flex', gap: 6 }}><button className="btn btn-ghost btn-sm" onClick={() => openEditPlayer(p)}>Edit</button><button className="btn btn-danger btn-sm" onClick={() => removePlayer(p.id)}>✕</button></div></td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </>}
+
+    {tab === 'schedule' && <>
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Schedule ({sd.matches.length} matches)</span>
+          <button className="btn btn-primary btn-sm" onClick={() => { setMForm({ date: '', round: '', venue: '', opponent: '' }); setEditMatch(null); setShowAddMatch(true); }}>+ Add Match</button>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>Round</th><th>Venue</th><th>Opponent</th><th></th></tr></thead>
+          <tbody>
+            {sd.matches.sort((a,b) => a.date.localeCompare(b.date)).map(m => <tr key={m.id}>
+              <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{fmt(m.date)}</td>
+              <td style={{ fontWeight: 500 }}>{m.round}</td>
+              <td style={{ color: m.venue ? 'var(--text)' : 'var(--text3)' }}>{m.venue || '—'}</td>
+              <td style={{ color: m.opponent ? 'var(--text)' : 'var(--text3)' }}>{m.opponent || '—'}</td>
+              <td><div style={{ display: 'flex', gap: 6 }}><button className="btn btn-ghost btn-sm" onClick={() => openEditMatch(m)}>Edit</button></div></td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </>}
+
+    {showAddPlayer && <Modal title={editPlayer ? 'Edit Player' : 'Add Player'} onClose={() => { setShowAddPlayer(false); setEditPlayer(null); }} footer={<><button className="btn btn-secondary" onClick={() => { setShowAddPlayer(false); setEditPlayer(null); }}>Cancel</button><button className="btn btn-primary" onClick={savePlayer}>Save</button></>}>
+      <div className="form-group"><label className="form-label">Name *</label><input value={pForm.name} onChange={e => setPForm(f => ({...f, name: e.target.value}))} placeholder="Player name"/></div>
+      <div className="form-group"><label className="form-label">Phone (for WhatsApp)</label><input value={pForm.phone} onChange={e => setPForm(f => ({...f, phone: e.target.value}))} placeholder="+61 4xx xxx xxx"/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Role</label>
+          <select value={pForm.role} onChange={e => setPForm(f => ({...f, role: e.target.value}))}>
+            {roles.map(r => <option key={r}>{r}</option>)}
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Status</label>
+          <select value={pForm.active ? 'active' : 'inactive'} onChange={e => setPForm(f => ({...f, active: e.target.value === 'active'}))}>
+            <option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </Modal>}
+
+    {showAddMatch && <Modal title={editMatch ? 'Edit Match' : 'Add Match'} onClose={() => { setShowAddMatch(false); setEditMatch(null); }} footer={<><button className="btn btn-secondary" onClick={() => { setShowAddMatch(false); setEditMatch(null); }}>Cancel</button><button className="btn btn-primary" onClick={saveMatch}>Save</button></>}>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Date *</label><input type="date" value={mForm.date} onChange={e => setMForm(f => ({...f, date: e.target.value}))}/></div>
+        <div className="form-group"><label className="form-label">Round / Label *</label><input value={mForm.round} onChange={e => setMForm(f => ({...f, round: e.target.value}))} placeholder="e.g. Round 1, Semi Final"/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Venue</label><input value={mForm.venue} onChange={e => setMForm(f => ({...f, venue: e.target.value}))} placeholder="Ground name"/></div>
+      <div className="form-group"><label className="form-label">Opposition</label><input value={mForm.opponent} onChange={e => setMForm(f => ({...f, opponent: e.target.value}))} placeholder="Opponent team name"/></div>
+    </Modal>}
+
+    {showNewSeason && <Modal title="Create New Season" onClose={() => setShowNewSeason(false)} footer={<><button className="btn btn-secondary" onClick={() => setShowNewSeason(false)}>Cancel</button><button className="btn btn-primary" onClick={createSeason}>Create Season</button></>}>
+      <div style={{ padding: '4px 0 12px', fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>A new season will start fresh with an empty schedule. Your current player list will be carried over — you can add/remove players after.</div>
+      <div className="form-group"><label className="form-label">Season Name *</label><input value={newSeason.name} onChange={e => setNewSeason(f => ({...f, name: e.target.value}))} placeholder="e.g. Summer 2026 / Winter 2026"/></div>
+      <div className="form-group"><label className="form-label">Start Date</label><input type="date" value={newSeason.startDate} onChange={e => setNewSeason(f => ({...f, startDate: e.target.value}))}/></div>
+    </Modal>}
+  </div>;
+}
+
+// ─── AVAILABILITY ───────────────────────────────────────────────
+function Availability({ players, matches, availability, setAvailability, notify }) {
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const today = new Date();
+  const upcoming = matches.filter(m => new Date(m.date + 'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const past = matches.filter(m => new Date(m.date + 'T00:00:00') < today).sort((a,b) => b.date.localeCompare(a.date));
+  const allSorted = [...upcoming, ...past];
+
+  const toggle = (matchId, playerId) => {
+    const cur = (availability[matchId] || {})[playerId] || 'tbd';
+    const next = cur === 'tbd' ? 'yes' : cur === 'yes' ? 'no' : 'tbd';
+    setAvailability(prev => {
+      const n = { ...prev, [matchId]: { ...(prev[matchId] || {}), [playerId]: next } };
+      return n;
+    });
+  };
+
+  const countYes = (matchId) => Object.values(availability[matchId] || {}).filter(v => v === 'yes').length;
+
+  const generateLink = (matchId) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    const url = `${window.location.href.split('?')[0]}?avail=${matchId}&match=${encodeURIComponent(match.round)}`;
+    navigator.clipboard.writeText(url).catch(() => {});
+    notify('Availability link copied to clipboard!');
+  };
+
+  return <div>
+    <div className="page-header">
+      <div className="page-title">Availability</div>
+      <div className="page-sub">Click a dot to toggle: grey = TBD, green = available, red = unavailable</div>
+    </div>
+
+    <div className="card">
+      <div style={{ overflowX: 'auto' }}>
+        <table className="avail-table" style={{ minWidth: 700 }}>
+          <thead>
+            <tr>
+              <th style={{ minWidth: 130, position: 'sticky', left: 0, background: 'var(--bg2)' }}>Player</th>
+              {allSorted.slice(0, 12).map(m => {
+                const y = countYes(m.id);
+                return <th key={m.id} style={{ textAlign: 'center', minWidth: 68 }}>
+                  <div>{m.round}</div>
+                  <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text3)', marginTop: 1 }}>{fmt(m.date)}</div>
+                  <div style={{ fontSize: 10, marginTop: 2, color: y >= 9 ? 'var(--green)' : y >= 7 ? 'var(--amber)' : 'var(--text3)' }}>{y} ✓</div>
+                </th>;
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {players.filter(p => p.active !== false).map(p => <tr key={p.id}>
+              <td style={{ fontWeight: 500, position: 'sticky', left: 0, background: 'var(--bg2)', whiteSpace: 'nowrap' }}>{p.name}</td>
+              {allSorted.slice(0, 12).map(m => {
+                const val = (availability[m.id] || {})[p.id] || 'tbd';
+                return <td key={m.id} className="avail-cell" onClick={() => toggle(m.id, p.id)}>
+                  <div className={'avail-dot ' + val}>{val === 'yes' ? '✓' : val === 'no' ? '✕' : '?'}</div>
+                </td>;
+              })}
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div className="card">
+      <div className="card-header"><span className="card-title">Generate availability links</span></div>
+      <div style={{ padding: '8px 8px' }}>
+        {upcoming.slice(0, 6).map(m => {
+          const y = countYes(m.id);
+          const total = players.filter(p => p.active !== false).length;
+          const responded = Object.values(availability[m.id] || {}).filter(v => v !== 'tbd').length;
+          return <div key={m.id} className="match-row">
+            <div className="match-date">{fmt(m.date)}</div>
+            <div style={{ flex: 1 }}>
+              <div className="match-round">{m.round}</div>
+              <div className="match-detail">{responded}/{total} responded · {y} available</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ background: y >= 9 ? 'var(--green-bg)' : 'var(--amber-bg)', color: y >= 9 ? 'var(--green)' : 'var(--amber)', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{y >= 11 ? '✓ Full squad' : y >= 9 ? '✓ Good' : y >= 7 ? '⚠ Short' : '✕ Critical'}</span>
+              <button className="btn btn-ghost btn-sm" onClick={() => generateLink(m.id)}>Copy link 🔗</button>
+            </div>
+          </div>;
+        })}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── TEAM SELECTION ─────────────────────────────────────────────
+function TeamSelection({ players, matches, availability, notify }) {
+  const today = new Date();
+  const upcoming = matches.filter(m => new Date(m.date + 'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date));
+  const [selectedId, setSelectedId] = useState(upcoming[0]?.id || matches[0]?.id);
+  const [selected, setSelected] = useState([]);
+
+  const match = matches.find(m => m.id === selectedId);
+  const avail = availability[selectedId] || {};
+  const available = players.filter(p => avail[p.id] === 'yes');
+  const unavailable = players.filter(p => avail[p.id] === 'no');
+  const tbd = players.filter(p => !avail[p.id] || avail[p.id] === 'tbd');
+
+  useEffect(() => {
+    setSelected(available.slice(0, 11).map(p => p.id));
+  }, [selectedId]);
+
+  const toggleSelect = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 11 ? [...prev, id] : prev);
+
+  const copyTeam = () => {
+    if (!match) return;
+    const names = players.filter(p => selected.includes(p.id)).map(p => p.name);
+    const text = `MCA XI — ${match.round} (${fmt(match.date)})\n\n${names.map((n, i) => `${i+1}. ${n}`).join('\n')}\n\nSent from MCA Cricket Manager`;
+    navigator.clipboard.writeText(text).catch(() => {});
+    notify('Team list copied!');
+  };
+
+  const roleColor = (r) => {
+    if (!r) return 'gray';
+    if (r.includes('Bat') || r.includes('Open')) return 'blue';
+    if (r.includes('Bowl')) return 'red';
+    if (r.includes('Keep')) return 'amber';
+    return 'green';
+  };
+
+  return <div>
+    <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div>
+        <div className="page-title">Team Selection</div>
+        <div className="page-sub">Select your XI from available players</div>
+      </div>
+      <select value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ width: 'auto', padding: '7px 12px' }}>
+        {matches.sort((a,b) => a.date.localeCompare(b.date)).map(m => <option key={m.id} value={m.id}>{m.round} — {fmt(m.date)}</option>)}
+      </select>
+    </div>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title" style={{ color: 'var(--green)' }}>Available ({available.length})</span>
+          <span style={{ fontSize: 12, color: 'var(--text3)' }}>{selected.length}/11 selected</span>
+        </div>
+        <div style={{ padding: '8px 12px' }}>
+          {available.length === 0 && <div className="empty"><div className="empty-icon">🏏</div><div className="empty-text">No availability marked yet</div></div>}
+          {available.map((p, i) => {
+            const inXI = selected.includes(p.id);
+            return <div key={p.id} onClick={() => toggleSelect(p.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 4, background: inXI ? 'var(--accent-bg)' : 'var(--bg3)', border: inXI ? '1px solid var(--accent-border)' : '1px solid var(--border)', transition: 'all .15s' }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: inXI ? 'var(--accent)' : 'var(--bg4)', color: inXI ? 'white' : 'var(--text3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{inXI ? selected.indexOf(p.id) + 1 : ''}</div>
+              <span style={{ fontWeight: inXI ? 600 : 400, flex: 1 }}>{p.name}</span>
+              <span className={'badge ' + roleColor(p.role)} style={{ fontSize: 10 }}>{p.role || '?'}</span>
+            </div>;
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-header"><span className="card-title">Selected XI</span><button className="btn btn-ghost btn-sm" onClick={copyTeam}>Copy 📋</button></div>
+          <div style={{ padding: '8px 12px' }}>
+            {selected.length === 0 && <div style={{ color: 'var(--text3)', padding: '12px 4px', fontSize: 13 }}>Click players on the left to build your XI</div>}
+            {selected.map((id, i) => {
+              const p = players.find(x => x.id === id);
+              if (!p) return null;
+              return <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 8, marginBottom: 3, background: 'var(--bg3)' }}>
+                <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--accent)', width: 18 }}>{i+1}.</span>
+                <span style={{ fontWeight: 500 }}>{p.name}</span>
+                <span className={'badge ' + roleColor(p.role)} style={{ fontSize: 10, marginLeft: 'auto' }}>{p.role || '?'}</span>
+              </div>;
+            })}
+          </div>
+        </div>
+
+        {tbd.length > 0 && <div className="card">
+          <div className="card-header"><span className="card-title" style={{ color: 'var(--text3)' }}>TBD ({tbd.length})</span></div>
+          <div style={{ padding: '8px 12px' }}>{tbd.map(p => <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', borderBottom: '1px solid var(--border)', fontSize: 13 }}><span style={{ color: 'var(--text3)', fontSize: 12 }}>?</span><span>{p.name}</span></div>)}</div>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
+// ─── FINANCE ────────────────────────────────────────────────────
+function Finance({ players, matches, availability, payments, setPayments, notify, updateMatchCosts }) {
+  useEffect(() => { window._updateMatchCosts = updateMatchCosts; }, [updateMatchCosts]);
+  const [tab, setTab] = useState('costs');
+  const [editMatch, setEditMatch] = useState(null);
+  const [costForm, setCostForm] = useState({});
+  const [addPayment, setAddPayment] = useState(null);
+  const [payForm, setPayForm] = useState({ amount: '', date: new Date().toISOString().slice(0,10), note: '' });
+  const [appDataFn, setAppDataFn] = useState(null);
+
+  const today = new Date();
+
+  const openCost = (m) => { setCostForm({ groundHire: m.groundHire || 0, balls: m.balls || 0, umpire: m.umpire || 0, matchFee: m.matchFee || 0, extras: m.extras || 0 }); setEditMatch(m); };
+
+  const playerStats = players.map(p => {
+    const paid = (payments[p.id] || []).reduce((s, x) => s + Number(x.amount), 0);
+    const owed = matches.reduce((s, m) => {
+      const av = (availability[m.id] || {})[p.id];
+      if (av === 'yes') {
+        const cnt = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+        return s + costPerPlayer(m, cnt);
+      }
+      return s;
+    }, 0);
+    const gamesPlayed = matches.filter(m => (availability[m.id] || {})[p.id] === 'yes').length;
+    return { ...p, paid, owed, balance: paid - owed, gamesPlayed };
+  });
+
+  const totalCollected = playerStats.reduce((s, p) => s + p.paid, 0);
+  const totalCosts = matches.reduce((s, m) => s + totalCost(m), 0);
+  const totalOwed = playerStats.reduce((s, p) => s + p.owed, 0);
+
+  const savePayment = () => {
+    if (!payForm.amount || isNaN(payForm.amount)) return;
+    const p = addPayment;
+    setPayments(prev => {
+      const n = { ...prev, [p.id]: [...(prev[p.id] || []), { id: uid(), matchId: '', amount: Number(payForm.amount), date: payForm.date, note: payForm.note }] };
+      return n;
+    });
+    notify(`Payment of $${payForm.amount} recorded for ${p.name}`);
+    setAddPayment(null); setPayForm({ amount: '', date: new Date().toISOString().slice(0,10), note: '' });
+  };
+
+  return <div>
+    <div className="page-header">
+      <div className="page-title">Finance</div>
+      <div className="page-sub">Track game costs, player payments, and balances</div>
+    </div>
+
+    <div className="stat-grid">
+      <div className="stat-card"><div className="stat-val blue">${totalCosts.toFixed(0)}</div><div className="stat-lbl">Total season costs</div></div>
+      <div className="stat-card"><div className="stat-val green">${totalCollected.toFixed(0)}</div><div className="stat-lbl">Total collected</div></div>
+      <div className="stat-card"><div className="stat-val amber">${(totalOwed - totalCollected > 0 ? totalOwed - totalCollected : 0).toFixed(0)}</div><div className="stat-lbl">Outstanding</div></div>
+      <div className="stat-card"><div className="stat-val">{playerStats.filter(p => p.balance < -0.5).length}</div><div className="stat-lbl">Players in debt</div></div>
+    </div>
+
+    <div className="tabs">
+      {['costs','players'].map(t => <button key={t} className={'tab-btn' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>{t === 'costs' ? 'Game costs' : 'Player balances'}</button>)}
+    </div>
+
+    {tab === 'costs' && <div className="card">
+      <div className="card-header"><span className="card-title">Game costs</span></div>
+      <table>
+        <thead><tr><th>Date</th><th>Round</th><th>Players</th><th>Ground</th><th>Balls</th><th>Umpire</th><th>Match fee</th><th>Extras</th><th>Total</th><th>Per player</th><th></th></tr></thead>
+        <tbody>
+          {matches.sort((a,b) => a.date.localeCompare(b.date)).map(m => {
+            const yesCount = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+            const tc = totalCost(m);
+            const cpp = costPerPlayer(m, yesCount);
+            return <tr key={m.id}>
+              <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{fmt(m.date)}</td>
+              <td style={{ fontWeight: 500 }}>{m.round}</td>
+              <td style={{ textAlign: 'center' }}><span className="badge gray">{yesCount}</span></td>
+              <td style={{ color: m.groundHire ? 'var(--text)' : 'var(--text3)' }}>{m.groundHire ? '$'+m.groundHire : '—'}</td>
+              <td style={{ color: m.balls ? 'var(--text)' : 'var(--text3)' }}>{m.balls ? '$'+m.balls : '—'}</td>
+              <td style={{ color: m.umpire ? 'var(--text)' : 'var(--text3)' }}>{m.umpire ? '$'+m.umpire : '—'}</td>
+              <td style={{ color: m.matchFee ? 'var(--text)' : 'var(--text3)' }}>{m.matchFee ? '$'+m.matchFee : '—'}</td>
+              <td style={{ color: m.extras ? 'var(--text)' : 'var(--text3)' }}>{m.extras ? '$'+m.extras : '—'}</td>
+              <td style={{ fontWeight: 600, color: tc > 0 ? 'var(--text)' : 'var(--text3)' }}>{tc > 0 ? '$'+tc.toFixed(0) : '—'}</td>
+              <td style={{ fontFamily: 'var(--mono)', color: 'var(--accent)' }}>{cpp > 0 ? '$'+cpp.toFixed(2) : '—'}</td>
+              <td><button className="btn btn-ghost btn-sm" onClick={() => openCost(m)}>Edit</button></td>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>}
+
+    {tab === 'players' && <div className="card">
+      <div className="card-header"><span className="card-title">Player balances</span></div>
+      <table>
+        <thead><tr><th>Player</th><th>Games</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {playerStats.map(p => {
+            const bal = p.balance;
+            const pct = p.owed > 0 ? Math.min(100, (p.paid / p.owed) * 100) : 100;
+            return <tr key={p.id}>
+              <td style={{ fontWeight: 500 }}>{p.name}</td>
+              <td><span className="badge gray">{p.gamesPlayed}</span></td>
+              <td>${p.owed.toFixed(2)}</td>
+              <td style={{ color: 'var(--green)' }}>${p.paid.toFixed(2)}</td>
+              <td>
+                <span style={{ color: bal >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 600, fontFamily: 'var(--mono)' }}>{bal >= 0 ? '+' : ''}{bal.toFixed(2)}</span>
+                <div className="balance-bar"><div className="balance-fill" style={{ width: pct + '%', background: bal >= 0 ? 'var(--green)' : 'var(--amber)' }}/></div>
+              </td>
+              <td>{bal >= 0 ? <span className="badge green">Settled</span> : <span className="badge red">Owes ${Math.abs(bal).toFixed(0)}</span>}</td>
+              <td><button className="btn btn-primary btn-sm" onClick={() => { setAddPayment(p); setPayForm({ amount: '', date: new Date().toISOString().slice(0,10), note: '' }); }}>+ Payment</button></td>
+            </tr>;
+          })}
+        </tbody>
+      </table>
+    </div>}
+
+    {editMatch && <Modal title={'Edit costs — ' + editMatch.round} onClose={() => setEditMatch(null)} footer={<><button className="btn btn-secondary" onClick={() => setEditMatch(null)}>Cancel</button><button className="btn btn-primary" onClick={() => { setPayments(prev => prev); /* trigger re-render */ if(window._updateMatchCosts) window._updateMatchCosts(editMatch.id, costForm); setEditMatch(null); notify('Costs saved!'); }}>Save</button></>}>
+      <div style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 16 }}>Enter amounts in AUD. Leave at 0 if not applicable.</div>
+      <div className="form-row">
+        {['groundHire','balls','umpire','matchFee','extras'].map(k => <div key={k} className="form-group"><label className="form-label">{k === 'groundHire' ? 'Ground hire' : k === 'matchFee' ? 'Match fee' : k.charAt(0).toUpperCase() + k.slice(1)}</label><input type="number" min="0" value={costForm[k]} onChange={e => setCostForm(f => ({...f, [k]: Number(e.target.value)}))} placeholder="0"/></div>)}
+      </div>
+      <div style={{ background: 'var(--bg3)', borderRadius: 8, padding: '10px 14px', marginTop: 8, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+        <span style={{ color: 'var(--text2)' }}>Total</span>
+        <span style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>${Object.values(costForm).reduce((s,v) => s + Number(v), 0).toFixed(2)}</span>
+      </div>
+    </Modal>}
+
+    {addPayment && <Modal title={'Record payment — ' + addPayment.name} onClose={() => setAddPayment(null)} footer={<><button className="btn btn-secondary" onClick={() => setAddPayment(null)}>Cancel</button><button className="btn btn-primary" onClick={savePayment}>Save Payment</button></>}>
+      <div style={{ background: 'var(--bg3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--text2)' }}>Current balance</span>
+          <span style={{ fontWeight: 600, color: playerStats.find(p => p.id === addPayment.id)?.balance >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            {(() => { const s = playerStats.find(p => p.id === addPayment.id); return s ? (s.balance >= 0 ? '+' : '') + s.balance.toFixed(2) : '—'; })()}
+          </span>
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Amount ($) *</label><input type="number" min="0" value={payForm.amount} onChange={e => setPayForm(f => ({...f, amount: e.target.value}))} placeholder="0.00"/></div>
+        <div className="form-group"><label className="form-label">Date</label><input type="date" value={payForm.date} onChange={e => setPayForm(f => ({...f, date: e.target.value}))}/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Note</label><input value={payForm.note} onChange={e => setPayForm(f => ({...f, note: e.target.value}))} placeholder="e.g. Bank transfer, Cash"/></div>
+    </Modal>}
+  </div>;
+}
+
+// ─── WHATSAPP ───────────────────────────────────────────────────
+function WhatsApp({ players, matches, availability, payments }) {
+  const [tab, setTab] = useState('reminder');
+  const [selectedMatch, setSelectedMatch] = useState(matches[0]?.id || '');
+  const [copied, setCopied] = useState(null);
+
+  const today = new Date();
+  const upcoming = matches.filter(m => new Date(m.date + 'T00:00:00') >= today).sort((a,b) => a.date.localeCompare(b.date));
+
+  const playerStats = players.map(p => {
+    const paid = (payments[p.id] || []).reduce((s, x) => s + Number(x.amount), 0);
+    const owed = matches.reduce((s, m) => {
+      const av = (availability[m.id] || {})[p.id];
+      if (av === 'yes') {
+        const cnt = Object.values(availability[m.id] || {}).filter(v => v === 'yes').length;
+        return s + costPerPlayer(m, cnt);
+      }
+      return s;
+    }, 0);
+    return { ...p, paid, owed, balance: paid - owed };
+  });
+
+  const match = matches.find(m => m.id === selectedMatch);
+  const availablePlayers = match ? players.filter(p => (availability[match.id] || {})[p.id] === 'yes') : [];
+  const tbdPlayers = match ? players.filter(p => !(availability[match.id] || {})[p.id] || (availability[match.id] || {})[p.id] === 'tbd') : [];
+  const debtors = playerStats.filter(p => p.balance < -0.5);
+
+  const buildReminder = (p) => {
+    if (!match) return '';
+    return `Hey ${p.name.split(' ')[0]} 🏏\n\nReminder: *${match.round}* is this *${fmtFull(match.date)}*${match.venue ? ` at ${match.venue}` : ''}${match.opponent ? ` vs ${match.opponent}` : ''}.\n\nYou're confirmed in the squad. Reply CONFIRM to lock in your spot or let us know if plans change.\n\nSee you on the field! 🟢`;
+  };
+
+  const buildChase = (p) => {
+    if (!match) return '';
+    return `Hey ${p.name.split(' ')[0]},\n\nQuick one — *${match.round}* is ${fmtFull(match.date)}${match.opponent ? ` vs ${match.opponent}` : ''}. You haven't marked your availability yet 👀\n\nReply *YES* if you're in or *NO* if you can't make it. We need to know by Wednesday!\n\nCheers 🏏`;
+  };
+
+  const buildPaymentReminder = (p) => {
+    const gamesPlayed = matches.filter(m => (availability[m.id] || {})[p.id] === 'yes').length;
+    return `Hey ${p.name.split(' ')[0]},\n\nJust a quick reminder about your cricket fees 💰\n\nGames played: *${gamesPlayed}*\nTotal owed: *$${p.owed.toFixed(2)}*\nPaid so far: *$${p.paid.toFixed(2)}*\nBalance due: *$${Math.abs(p.balance).toFixed(2)}*\n\nPlease transfer when you get a chance. Bank details:\nBSB: XXX-XXX\nAcc: XXXXXXXXX\nRef: ${p.name.replace(' ', '').toUpperCase()}\n\nThanks! 🙏`;
+  };
+
+  const copy = (text, key) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const scriptBlocks = [
+    {
+      title: 'Auto-trigger setup (Google Apps Script)',
+      lang: 'javascript',
+      code: `// Paste this in Google Apps Script (script.google.com)
+// Set a trigger: Time-driven → Every Monday → 9am
+
+const TWILIO_SID = 'YOUR_TWILIO_ACCOUNT_SID';
+const TWILIO_TOKEN = 'YOUR_TWILIO_AUTH_TOKEN';
+const TWILIO_FROM = 'whatsapp:+14155238886'; // Twilio sandbox number
+
+function sendWhatsApp(to, body) {
+  const url = \`https://api.twilio.com/2010-04-01/Accounts/\${TWILIO_SID}/Messages.json\`;
+  const payload = { To: \`whatsapp:\${to}\`, From: TWILIO_FROM, Body: body };
+  const options = {
+    method: 'post',
+    headers: { Authorization: 'Basic ' + Utilities.base64Encode(\`\${TWILIO_SID}:\${TWILIO_TOKEN}\`) },
+    payload: payload
+  };
+  UrlFetchApp.fetch(url, options);
+}
+
+function weeklyPaymentReminders() {
+  // Read from your Google Sheet & call sendWhatsApp for each debtor
+  const sheet = SpreadsheetApp.getActiveSpreadsheet();
+  const data = sheet.getSheetByName('Player Summary').getDataRange().getValues();
+  data.slice(1).forEach(row => {
+    const name = row[0], phone = row[1], balance = row[4];
+    if (balance < -1 && phone) {
+      const msg = \`Hey \${name.split(' ')[0]}, your balance is $\${Math.abs(balance).toFixed(2)}. Please transfer when you get a chance!\`;
+      sendWhatsApp(phone, msg);
+    }
+  });
+}`
+    }
+  ];
+
+  return <div>
+    <div className="page-header">
+      <div className="page-title">WhatsApp Automation</div>
+      <div className="page-sub">Pre-built message templates + automation scripts</div>
+    </div>
+
+    <div className="tabs">
+      {['reminder','chase','payment','scripts'].map(t => <button key={t} className={'tab-btn' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
+        {t === 'reminder' ? 'Game reminder' : t === 'chase' ? 'Availability chase' : t === 'payment' ? 'Payment reminder' : 'Setup scripts'}
+      </button>)}
+    </div>
+
+    {(tab === 'reminder' || tab === 'chase') && <>
+      <div className="form-group" style={{ marginBottom: 20 }}>
+        <label className="form-label">Select match</label>
+        <select value={selectedMatch} onChange={e => setSelectedMatch(e.target.value)} style={{ width: 320 }}>
+          {matches.sort((a,b) => a.date.localeCompare(b.date)).map(m => <option key={m.id} value={m.id}>{m.round} — {fmt(m.date)}</option>)}
+        </select>
+      </div>
+
+      {tab === 'reminder' && <>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Sending to <strong style={{ color: 'var(--text)' }}>{availablePlayers.length} confirmed players</strong></div>
+        {availablePlayers.length === 0 && <div className="empty"><div className="empty-icon">📱</div><div className="empty-text">No players marked available for this match yet</div></div>}
+        {availablePlayers.map(p => {
+          const msg = buildReminder(p);
+          return <div key={p.id} className="card" style={{ marginBottom: 12 }}>
+            <div className="card-header">
+              <div style={{ display: 'flex', align: 'center', gap: 10 }}><span style={{ fontWeight: 600 }}>{p.name}</span>{p.phone && <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text3)' }}>{p.phone}</span>}{!p.phone && <span className="badge amber">No phone number</span>}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => copy(msg, 'rem_' + p.id)}>{copied === 'rem_' + p.id ? '✓ Copied' : 'Copy 📋'}</button>
+            </div>
+            <div className="card-body"><div className="wa-bubble" style={{ whiteSpace: 'pre-wrap' }}>{msg}<div className="wa-time">now</div></div></div>
+          </div>;
+        })}
+      </>}
+
+      {tab === 'chase' && <>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Chasing <strong style={{ color: 'var(--text)' }}>{tbdPlayers.length} players</strong> who haven't responded</div>
+        {tbdPlayers.length === 0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">Everyone has responded for this match!</div></div>}
+        {tbdPlayers.map(p => {
+          const msg = buildChase(p);
+          return <div key={p.id} className="card" style={{ marginBottom: 12 }}>
+            <div className="card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ fontWeight: 600 }}>{p.name}</span>{!p.phone && <span className="badge amber">No phone</span>}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => copy(msg, 'ch_' + p.id)}>{copied === 'ch_' + p.id ? '✓ Copied' : 'Copy 📋'}</button>
+            </div>
+            <div className="card-body"><div className="wa-bubble" style={{ whiteSpace: 'pre-wrap' }}>{msg}<div className="wa-time">now</div></div></div>
+          </div>;
+        })}
+      </>}
+    </>}
+
+    {tab === 'payment' && <>
+      <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}><strong style={{ color: 'var(--text)' }}>{debtors.length} players</strong> have an outstanding balance</div>
+      {debtors.length === 0 && <div className="empty"><div className="empty-icon">💰</div><div className="empty-text">Everyone is paid up — nothing to chase!</div></div>}
+      {debtors.map(p => {
+        const msg = buildPaymentReminder(p);
+        return <div key={p.id} className="card" style={{ marginBottom: 12 }}>
+          <div className="card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontWeight: 600 }}>{p.name}</span>
+              <span className="badge red">Owes ${Math.abs(p.balance).toFixed(0)}</span>
+              {!p.phone && <span className="badge amber">No phone</span>}
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={() => copy(msg, 'pay_' + p.id)}>{copied === 'pay_' + p.id ? '✓ Copied' : 'Copy 📋'}</button>
+          </div>
+          <div className="card-body"><div className="wa-bubble" style={{ whiteSpace: 'pre-wrap' }}>{msg}<div className="wa-time">now</div></div></div>
+        </div>;
+      })}
+    </>}
+
+    {tab === 'scripts' && <>
+      <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 18px', marginBottom: 20, fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>
+        <strong style={{ color: 'var(--text)', display: 'block', marginBottom: 6 }}>How to set up full automation</strong>
+        1. Sign up at <a href="https://twilio.com" target="_blank" style={{ color: 'var(--accent)' }}>twilio.com</a> and enable the WhatsApp sandbox (free)<br/>
+        2. Export your player data from this app as CSV or connect it to a Google Sheet<br/>
+        3. Paste the script below into <a href="https://script.google.com" target="_blank" style={{ color: 'var(--accent)' }}>Google Apps Script</a> (free, attached to your Sheet)<br/>
+        4. Set a time-based trigger (e.g. Monday 9am) — it reads your Sheet and sends messages automatically
+      </div>
+      {scriptBlocks.map((s, i) => <div key={i} className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header"><span className="card-title" style={{ fontFamily: 'var(--mono)', fontSize: 13 }}>{s.title}</span><button className="btn btn-ghost btn-sm" onClick={() => copy(s.code, 'sc_' + i)}>{copied === 'sc_' + i ? '✓ Copied' : 'Copy'}</button></div>
+        <div className="card-body"><pre style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{s.code}</pre></div>
+      </div>)}
+    </>}
+  </div>;
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────────
+function App() {
+  const [appData, setAppData] = useState(initApp);
+  const [view, setView] = useState('dashboard');
+  const [toast, setToast] = useState(null);
+
+  const notify = (msg) => setToast(msg);
+
+  const activeSeason = appData.activeSeason;
+  const sd = appData.seasonData[activeSeason] || { players: [], matches: [], availability: {}, payments: {} };
+
+  const setSD = (fn) => setAppData(prev => {
+    const next = { ...prev, seasonData: { ...prev.seasonData, [activeSeason]: fn(prev.seasonData[activeSeason]) } };
+    saveData(next); return next;
+  });
+
+  const setAvailability = (fn) => setSD(sd => {
+    const av = typeof fn === 'function' ? fn(sd.availability) : fn;
+    return { ...sd, availability: av };
+  });
+  const setPayments = (fn) => setSD(sd => {
+    const p = typeof fn === 'function' ? fn(sd.payments) : fn;
+    return { ...sd, payments: p };
+  });
+
+  const setActiveSeason = (id) => setAppData(prev => { const n = { ...prev, activeSeason: id }; saveData(n); return n; });
+
+  const navItems = [
+    { id: 'dashboard', icon: '◉', label: 'Dashboard', section: 'main' },
+    { id: 'setup', icon: '⚙', label: 'Season Setup', section: 'main' },
+    { id: 'availability', icon: '✓', label: 'Availability', section: 'manage' },
+    { id: 'team', icon: '🏏', label: 'Team Selection', section: 'manage' },
+    { id: 'finance', icon: '$', label: 'Finance', section: 'manage' },
+    { id: 'whatsapp', icon: '💬', label: 'WhatsApp', section: 'manage' },
+  ];
+
+  const sections = [...new Set(navItems.map(n => n.section))];
+
+  return <div className="app">
+    <div className="sidebar">
+      <div className="logo">
+        <div className="logo-icon">🏏</div>
+        <div className="logo-title">MCA Cricket</div>
+        <div className="logo-season">{appData.seasons.find(s => s.id === activeSeason)?.name || 'Season'}</div>
+      </div>
+
+      {sections.map(sec => <div key={sec} className="nav-section">
+        <div className="nav-label">{sec}</div>
+        {navItems.filter(n => n.section === sec).map(n => <div key={n.id} className={'nav-item' + (view === n.id ? ' active' : '')} onClick={() => setView(n.id)}>
+          <span className="icon">{n.icon}</span>{n.label}
+        </div>)}
+      </div>)}
+
+      <div className="season-switcher">
+        <div className="nav-label" style={{ marginBottom: 6 }}>Season</div>
+        <select className="season-select" value={activeSeason} onChange={e => setActiveSeason(e.target.value)}>
+          {appData.seasons.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+    </div>
+
+    <div className="main">
+      {view === 'dashboard' && <Dashboard players={sd.players} matches={sd.matches} availability={sd.availability} payments={sd.payments} />}
+      {view === 'setup' && <SeasonSetup appData={appData} setAppData={setAppData} notify={notify} activeSeason={activeSeason} />}
+      {view === 'availability' && <Availability players={sd.players} matches={sd.matches} availability={sd.availability} setAvailability={setAvailability} notify={notify} />}
+      {view === 'team' && <TeamSelection players={sd.players} matches={sd.matches} availability={sd.availability} notify={notify} />}
+      {view === 'finance' && <Finance players={sd.players} matches={sd.matches} availability={sd.availability} payments={sd.payments} setPayments={setPayments} notify={notify} updateMatchCosts={(id, costs) => setSD(sd => ({ ...sd, matches: sd.matches.map(m => m.id === id ? { ...m, ...costs } : m) }))} />}
+      {view === 'whatsapp' && <WhatsApp players={sd.players} matches={sd.matches} availability={sd.availability} payments={sd.payments} />}
+    </div>
+
+    {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
