@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>MCC Cricket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root{
+  --bg:#0d0f12;--bg2:#141720;--bg3:#1c2030;--bg4:#262a3e;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8eaf0;--text2:#8b90a0;--text3:#4e5368;
+  --green:#22c55e;--gbg:rgba(34,197,94,0.12);--gborder:rgba(34,197,94,0.3);
+  --red:#f87171;--rbg:rgba(248,113,113,0.12);--rborder:rgba(248,113,113,0.3);
+  --amber:#fbbf24;--abg:rgba(251,191,36,0.12);--aborder:rgba(251,191,36,0.3);
+  --blue:#60a5fa;--bbg:rgba(96,165,250,0.12);
+  --accent:#818cf8;--acbg:rgba(129,140,248,0.13);--acborder:rgba(129,140,248,0.32);
+  --wa:#25D366;--wabg:rgba(37,211,102,0.13);--waborder:rgba(37,211,102,0.32);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--rl:14px;--rx:18px;--nav-h:64px;--hdr-h:56px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body,#root{height:100%;width:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5;overflow:hidden;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+.app{display:flex;flex-direction:column;height:100vh;width:100%;overflow:hidden;}
+.app-header{height:var(--hdr-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.app-title{font-size:16px;font-weight:600;letter-spacing:-0.3px;flex:1;}
+.app-season{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+.sync-dot.err{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.app-content{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + 8px);}
+.bottom-nav{height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;position:fixed;bottom:0;left:0;right:0;z-index:20;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);border:none;background:none;font-family:var(--font);transition:color .15s;padding:6px 2px;}
+.nav-btn.active{color:var(--accent);}
+.nav-icon{font-size:19px;line-height:1;}
+.nav-label{font-size:10px;font-weight:600;}
+@media(min-width:768px){
+  .app{flex-direction:row;}
+  .app-main{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+  .bottom-nav{position:static;height:auto;flex-direction:column;width:190px;border-top:none;border-right:1px solid var(--border);padding:12px 8px;gap:2px;justify-content:flex-start;}
+  .nav-btn{flex:0 0 auto;flex-direction:row;justify-content:flex-start;gap:9px;padding:9px 12px;border-radius:8px;font-size:13.5px;}
+  .nav-btn.active{background:var(--acbg);border:1px solid var(--acborder);}
+  .nav-icon{font-size:15px;}
+  .nav-label{font-size:13px;font-weight:500;}
+  .app-content{padding-bottom:0;}
+  .nav-logo{padding:12px 12px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+}
+.page{padding:16px;}
+.page-title{font-size:20px;font-weight:600;letter-spacing:-0.4px;margin-bottom:2px;}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:12px;}
+.card-hdr{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-title{font-size:14px;font-weight:600;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:13px 14px;}
+.stat-val{font-size:24px;font-weight:600;letter-spacing:-0.8px;line-height:1.1;}
+.stat-val.g{color:var(--green);}
+.stat-val.a{color:var(--amber);}
+.stat-val.b{color:var(--blue);}
+.stat-val.r{color:var(--red);}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 15px;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:none;white-space:nowrap;text-decoration:none;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:disabled{opacity:.5;cursor:default;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+.btn-danger{background:var(--rbg);color:var(--red);border:1px solid var(--rborder);}
+.btn-wa{background:var(--wabg);color:var(--wa);border:1px solid var(--waborder);font-weight:600;}
+.btn-sm{padding:6px 11px;font-size:12px;border-radius:8px;}
+.btn-full{width:100%;display:flex;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:15px;padding:10px 12px;outline:none;transition:border-color .15s;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+input::placeholder{color:var(--text3);}
+select option{background:var(--bg3);}
+.form-group{margin-bottom:13px;}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.05em;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.editable{cursor:pointer;border-bottom:1px dashed var(--text3);padding-bottom:1px;transition:color .1s;}
+.editable:hover{border-color:var(--accent);color:var(--accent);}
+.edit-input{background:var(--bg3);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:var(--font);font-size:14px;padding:4px 8px;outline:none;width:100%;max-width:180px;}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge.g{background:var(--gbg);color:var(--green);border:1px solid var(--gborder);}
+.badge.r{background:var(--rbg);color:var(--red);border:1px solid var(--rborder);}
+.badge.a{background:var(--abg);color:var(--amber);border:1px solid var(--aborder);}
+.badge.b{background:var(--bbg);color:var(--blue);}
+.badge.gray{background:var(--bg3);color:var(--text2);}
+.avail-dot{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:transform .1s;user-select:none;}
+.avail-dot.yes{background:var(--gbg);color:var(--green);border-color:var(--gborder);}
+.avail-dot.no{background:var(--rbg);color:var(--red);border-color:var(--rborder);}
+.avail-dot.tbd{background:var(--bg3);color:var(--text3);border-color:var(--border);}
+.avail-dot:active{transform:scale(.88);}
+.avail-dot.saving{opacity:.4;pointer-events:none;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:flex;align-items:flex-end;z-index:100;}
+@media(min-width:768px){.modal-overlay{align-items:center;justify-content:center;padding:20px;}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rx) var(--rx) 0 0;width:100%;max-height:92vh;overflow-y:auto;}
+@media(min-width:768px){.modal{border-radius:var(--rx);max-width:480px;}}
+.modal-hdr{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;padding:2px 6px;}
+.modal-body{padding:18px;}
+.modal-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2);}
+.tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:3px;margin-bottom:16px;overflow-x:auto;}
+.tab-btn{flex-shrink:0;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);border:none;background:none;font-family:var(--font);white-space:nowrap;}
+.tab-btn.active{background:var(--bg4);color:var(--text);}
+.bal-bar{height:4px;border-radius:2px;background:var(--bg3);overflow:hidden;margin-top:5px;}
+.bal-fill{height:100%;border-radius:2px;transition:width .3s;}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border2);border-radius:20px;padding:10px 18px;font-size:13px;color:var(--text);z-index:300;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.4);}
+@media(min-width:768px){.toast{bottom:20px;}}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;}
+.spinner{width:32px;height:32px;border:2.5px solid var(--bg4);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pa-page{max-width:460px;margin:0 auto;padding:24px 16px 40px;}
+.pa-hdr{text-align:center;padding:20px 0 28px;}
+.pa-match{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:12px;}
+.pa-round{font-weight:600;font-size:16px;}
+.pa-date{font-size:12px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+.pa-btns{display:flex;gap:8px;margin-top:13px;}
+.pa-btn{flex:1;padding:11px;border-radius:var(--r);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all .15s;}
+.pa-btn.yes{background:var(--gbg);border-color:var(--gborder);color:var(--green);}
+.pa-btn.no{background:var(--rbg);border-color:var(--rborder);color:var(--red);}
+.match-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:13px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.mdb{background:var(--bg3);border-radius:8px;padding:5px 9px;text-align:center;flex-shrink:0;min-width:44px;}
+.mdb-d{font-size:17px;font-weight:600;line-height:1;}
+.mdb-m{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;}
+.player-avatar{width:36px;height:36px;border-radius:50%;background:var(--acbg);border:1px solid var(--acborder);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0;}
+.next-banner{background:linear-gradient(135deg,rgba(129,140,248,0.1),var(--bg3));border:1px solid var(--acborder);border-radius:var(--rl);padding:15px;margin-bottom:15px;}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxezYsZr6qf4G37fLsNZWQqxAPDwqxyDDRSjE6iJRqJaTJeXWtfnV-LjC14Qs0i3jqD/exec";
+const IS_CONFIGURED = true;
+
+const api = {
+  get: async (p) => {
+    const r = await fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams(p));
+    const j = await r.json();
+    if(j.status==="error") throw new Error(j.data?.error||"API error");
+    return j.data;
+  },
+  post: async (body) => {
+    // Build URL manually to avoid URLSearchParams encoding spaces as + instead of %20
+    const parts = Object.entries(body).map(([k,v]) => {
+      const val = typeof v === "object" ? JSON.stringify(v) : String(v);
+      return encodeURIComponent(k)+"="+encodeURIComponent(val);
+    });
+    const r = await fetch(APPS_SCRIPT_URL+"?"+parts.join("&"));
+    const j = await r.json();
+    if(j.status==="error") throw new Error(j.data?.error||"API error");
+    return j.data;
+  }
+};
+
+const toDateStr = d => {
+  if(!d) return "";
+  if(d instanceof Date) return d.toISOString().slice(0,10);
+  const s = d.toString().trim();
+  // Handle "Sat Apr 11 2026 ..." format from Sheets
+  if(s.length > 10) { const p = new Date(s); if(!isNaN(p)) return p.toISOString().slice(0,10); }
+  return s.slice(0,10);
+};
+const fmt = d=>{ if(!d) return "—"; return new Date(toDateStr(d)+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"short"}); };
+const fmtFull = d=>{ if(!d) return ""; return new Date(toDateStr(d)+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); };
+const fmtD = d=>{ if(!d) return ""; return new Date(toDateStr(d)+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric"}); };
+const fmtM = d=>{ if(!d) return ""; return new Date(toDateStr(d)+"T00:00:00").toLocaleDateString("en-AU",{month:"short"}); };
+const tc = m=>["GroundHire","Balls","Umpire","MatchFee","Extras"].reduce((s,k)=>s+(Number(m[k])||0),0);
+const uid = ()=>"id_"+Math.random().toString(36).slice(2,9);
+const waLink = (phone,msg)=>`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(msg)}`;
+const urlP = new URLSearchParams(window.location.search);
+
+const melbToday=(()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+const calcStats = (players,matches,availability,payments)=>players.map(p=>{
+  const pid=p.PlayerID, pmts=payments[pid]||[];
+  const totalAdvance=pmts.reduce((s,x)=>s+Number(x.Amount||0),0);
+  // Only count PAST matches (date < today) where player was marked available
+  const pastMatches=matches.filter(m=>toDateStr(m.Date)<melbToday);
+  const played=pastMatches.filter(m=>(availability[m.MatchID]||{})[pid]==="yes");
+  const totalOwed=played.reduce((s,m)=>{ const cnt=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length; return s+(cnt>0?tc(m)/cnt:0); },0);
+  return {...p,totalAdvance,totalOwed,balance:totalAdvance-totalOwed,gamesPlayed:played.length,pmts};
+});
+
+function Toast({msg,onDone}){ useEffect(()=>{const t=setTimeout(onDone,2500);return()=>clearTimeout(t);},[]);return <div className="toast">✓ {msg}</div>; }
+
+function Modal({title,children,footer,onClose}){
+  return <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal">
+      <div className="modal-hdr"><span className="modal-title">{title}</span><button className="modal-close" onClick={onClose}>×</button></div>
+      <div className="modal-body">{children}</div>
+      {footer&&<div className="modal-footer">{footer}</div>}
+    </div>
+  </div>;
+}
+
+function InlineEdit({value,onSave,type="text",options=null,placeholder=""}){
+  const [editing,setEditing]=useState(false);
+  const [val,setVal]=useState(value);
+  const ref=useRef();
+  useEffect(()=>{if(editing&&ref.current)ref.current.focus();},[editing]);
+  const save=()=>{setEditing(false);if(String(val)!==String(value))onSave(val);};
+  if(editing){
+    if(options) return <select ref={ref} value={val} onChange={e=>setVal(e.target.value)} onBlur={save} className="edit-input">{options.map(o=><option key={o}>{o}</option>)}</select>;
+    return <input ref={ref} type={type} value={val} onChange={e=>setVal(e.target.value)} onBlur={save} onKeyDown={e=>{if(e.key==="Enter")save();if(e.key==="Escape"){setVal(value);setEditing(false);}}} className="edit-input" placeholder={placeholder}/>;
+  }
+  return <span className="editable" onClick={()=>{setVal(value);setEditing(true);}}>{value||<span style={{color:"var(--text3)"}}>tap to edit</span>}</span>;
+}
+
+// ── PLAYER AVAILABILITY PAGE ─────────────────────────────────────
+function PlayerAvailPage({playerId}){
+  const [data,setData]=useState(null),[saving,setSaving]=useState({}),[err,setErr]=useState(null);
+  useEffect(()=>{
+    document.body.style.overflow='auto';
+    document.body.style.height='auto';
+    document.documentElement.style.overflow='auto';
+    document.documentElement.style.height='auto';
+    return()=>{
+      document.body.style.overflow='';
+      document.body.style.height='';
+      document.documentElement.style.overflow='';
+      document.documentElement.style.height='';
+    };
+  },[]);
+  useEffect(()=>{ api.get({action:"getPlayerData",playerId}).then(setData).catch(e=>setErr(e.message)); },[]);
+  const setStatus=async(matchId,status)=>{
+    setSaving(s=>({...s,[matchId]:true}));
+    try{
+      await api.post({action:"setAvailability",playerId,matchId,status});
+      setData(d=>{const av={...(d.availability||{})};if(!av[matchId])av[matchId]={};av[matchId][playerId]=status;return{...d,availability:av};});
+    }catch(e){alert("Save failed: "+e.message);}
+    finally{setSaving(s=>({...s,[matchId]:false}));}
+  };
+  if(err) return <div className="loading-screen"><div style={{color:"var(--red)",fontSize:14,padding:20,textAlign:"center"}}>{err}</div></div>;
+  if(!data) return <div className="loading-screen"><div className="spinner"/><div style={{color:"var(--text2)",fontSize:13}}>Loading…</div></div>;
+  const {player,matches,availability,config}=data;
+  const today=(()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  const upcoming=[...matches].filter(m=>toDateStr(m.Date)>=today).sort((a,b)=>toDateStr(a.Date).localeCompare(toDateStr(b.Date)));
+  return <div className="pa-page">
+    <div className="pa-hdr">
+      <div style={{fontSize:36,marginBottom:8}}>🏏</div>
+      <div style={{fontSize:22,fontWeight:600}}>{config?.ClubName||"MCC"} Cricket</div>
+      <div style={{fontSize:14,color:"var(--text2)",marginTop:4}}>Hey {player.Name.split(" ")[0]}, mark your availability for {config?.SeasonName||"this season"}</div>
+    </div>
+    {upcoming.length===0&&<div style={{textAlign:"center",color:"var(--text3)",padding:"40px 0"}}><div style={{fontSize:32,marginBottom:10}}>✅</div><div>No upcoming matches — you're all done!</div></div>}
+    {upcoming.map(m=>{
+      const cur=(availability[m.MatchID]||{})[playerId]||"tbd";
+      return <div key={m.MatchID} className="pa-match">
+        <div className="pa-round">{m.Round}{m.Opponent?` vs ${m.Opponent}`:""}</div>
+        <div className="pa-date">{fmtFull(m.Date)}{m.Venue?` · ${m.Venue}`:""}</div>
+        <div className="pa-btns">
+          <button className={"pa-btn"+(cur==="yes"?" yes":"")} onClick={()=>setStatus(m.MatchID,"yes")} disabled={saving[m.MatchID]}>{saving[m.MatchID]?"…":"✓ I'm in"}</button>
+          <button className={"pa-btn"+(cur==="no"?" no":"")} onClick={()=>setStatus(m.MatchID,"no")} disabled={saving[m.MatchID]}>{saving[m.MatchID]?"…":"✕ Can't make it"}</button>
+        </div>
+        {cur!=="tbd"&&!saving[m.MatchID]&&<div style={{fontSize:11,color:"var(--text3)",marginTop:8,textAlign:"center"}}>Saved as <span style={{color:cur==="yes"?"var(--green)":"var(--red)",fontWeight:600}}>{cur==="yes"?"available":"unavailable"}</span> · tap to change</div>}
+      </div>;
+    })}
+    <div style={{fontSize:11,color:"var(--text3)",textAlign:"center",marginTop:24}}>MCC Cricket Manager · Changes save instantly</div>
+  </div>;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function Dashboard({data}){
+  const {players=[],matches=[],availability={},payments={},config={}}=data;
+  const today=(()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  const sorted=[...matches].sort((a,b)=>(a.Date||"").toString().localeCompare((b.Date||"").toString()));
+  const past=sorted.filter(m=>toDateStr(m.Date)<today);
+  const futureAndToday=sorted.filter(m=>toDateStr(m.Date)>=today);
+  const next=futureAndToday[0]||null;
+  const upcoming=futureAndToday.slice(1); // excludes next match
+  const nextAvail=next?Object.values(availability[next.MatchID]||{}).filter(v=>v==="yes").length:0;
+  const stats=calcStats(players,matches,availability,payments);
+  const outstanding=stats.reduce((s,p)=>s+(p.balance<0?Math.abs(p.balance):0),0);
+  const debtors=stats.filter(p=>p.balance<-0.5).length;
+  return <div className="page">
+    {next&&<div className="next-banner">
+      <div style={{fontSize:11,fontWeight:600,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>Next match</div>
+      <div style={{fontSize:18,fontWeight:600}}>{next.Round}{next.Opponent?` vs ${next.Opponent}`:""}</div>
+      <div style={{fontSize:13,color:"var(--text2)",marginTop:2}}>{fmtFull(next.Date)}{next.Venue?` · ${next.Venue}`:""}</div>
+      <div style={{display:"flex",gap:20,marginTop:10}}>
+        <div><div style={{fontSize:20,fontWeight:600,color:nextAvail>=(Number(config?.MinPlayersNeeded)||11)?"var(--green)":nextAvail>=(Number(config?.MinPlayersNeeded)||11)-2?"var(--amber)":"var(--red)"}}>{nextAvail}</div><div style={{fontSize:10,color:"var(--text3)"}}>CONFIRMED</div></div>
+        <div><div style={{fontSize:20,fontWeight:600}}>{upcoming.length}</div><div style={{fontSize:10,color:"var(--text3)"}}>LEFT</div></div>
+        <div><div style={{fontSize:20,fontWeight:600}}>{past.length}</div><div style={{fontSize:10,color:"var(--text3)"}}>PLAYED</div></div>
+      </div>
+    </div>}
+    <div className="stat-grid">
+      <div className="stat-card"><div className="stat-val b">{players.filter(p=>p.Active==="Yes").length}</div><div className="stat-lbl">Players</div></div>
+      <div className="stat-card"><div className="stat-val">{past.length}/{matches.length}</div><div className="stat-lbl">Games</div></div>
+      <div className="stat-card"><div className="stat-val a">{debtors}</div><div className="stat-lbl">Unpaid</div></div>
+      <div className="stat-card"><div className="stat-val r">${Math.round(outstanding)}</div><div className="stat-lbl">Outstanding</div></div>
+    </div>
+    <div className="section-hdr"><span className="section-title">Upcoming</span></div>
+    {upcoming.slice(0,5).map(m=>{
+      const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+      return <div key={m.MatchID} className="match-card">
+        <div className="mdb"><div className="mdb-d">{fmtD(m.Date)}</div><div className="mdb-m">{fmtM(m.Date)}</div></div>
+        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{m.Round}</div><div style={{fontSize:12,color:"var(--text2)"}}>{m.Opponent?"vs "+m.Opponent:"—"}</div></div>
+        <span className={"badge "+(y>=(Number(data?.config?.MinPlayersNeeded)||11)?"g":y>=(Number(data?.config?.MinPlayersNeeded)||11)-2?"a":"gray")}>{y}✓</span>
+      </div>;
+    })}
+    {upcoming.length===0&&<div style={{color:"var(--text3)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No upcoming matches — add some in Matches tab</div>}
+  </div>;
+}
+
+// ── PLAYERS ──────────────────────────────────────────────────────
+function Players({data,reload,notify}){
+  const {players=[],matches=[],availability={},payments={},config={}}=data;
+  const [showAdd,setShowAdd]=useState(false);
+  const [showAdvance,setShowAdvance]=useState(null);
+  const [showDetail,setShowDetail]=useState(null);
+  const [search,setSearch]=useState("");
+  const [pForm,setPForm]=useState({Name:"",Phone:"",Role:"Batsman",Active:"Yes"});
+  const melbNow=()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  const [advForm,setAdvForm]=useState({amount:"",date:melbNow(),note:""});
+  const [saving,setSaving]=useState(false);
+  const roles=["Batsman","Bowler","All-rounder","Wicketkeeper","Opener"];
+  const stats=calcStats(players,matches,availability,payments);
+  const baseUrl=window.location.href.split("?")[0];
+  const filtered=stats.filter(s=>s.Name.toLowerCase().includes(search.toLowerCase()));
+
+  const savePlayer=async()=>{ if(!pForm.Name.trim())return; setSaving(true); try{await api.post({action:"addPlayer",player:{PlayerID:uid(),...pForm}});notify("Player added");setShowAdd(false);reload();}catch(e){alert(e.message);}finally{setSaving(false);} };
+  const updateField=async(p,field,value)=>{ try{await api.post({action:"updatePlayer",player:{...p,[field]:value}});notify("Saved");reload();}catch(e){alert(e.message);} };
+  const saveAdvance=async()=>{ if(!advForm.amount||isNaN(advForm.amount))return; setSaving(true); try{await api.post({action:"addPayment",playerId:showAdvance.PlayerID,amount:Number(advForm.amount),date:advForm.date,note:advForm.note||"Payment"});notify(`$${advForm.amount} recorded for ${showAdvance.Name}`);setShowAdvance(null);reload();}catch(e){alert(e.message);}finally{setSaving(false);} };
+
+  const availMsg=p=>`Hey ${p.Name.split(" ")[0]},\n\nPlease mark your availability for ${config?.SeasonName||"this season"} using your personal link:\n${baseUrl}?player=${p.PlayerID}\n\nTap Yes or No for each game. Takes 30 seconds. Thanks!`;
+  const balMsg=s=>`Hey ${s.Name.split(" ")[0]},\n\nYour MCC cricket summary:\nGames played: ${s.gamesPlayed}\nOwed: $${Math.round(s.totalOwed)}\nAdvance paid: $${Math.round(s.totalAdvance)}\nBalance: ${s.balance>=0?"$"+Math.round(s.balance)+" in credit":"$"+Math.round(Math.abs(s.balance))+" due"}${s.balance<-0.5?`\n\nPlease pay via PayID: ${config?.PayID||"add PayID in Settings"}`:""}`;
+
+  const rc=r=>!r?"gray":r.includes("Bat")||r.includes("Open")?"b":r.includes("Bowl")?"r":r.includes("Keep")?"a":"g";
+
+  return <div className="page">
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+      <div><div className="page-title">Players</div><div className="page-sub">{stats.filter(s=>s.Active==="Yes").length} active · {stats.filter(s=>s.balance<-0.5).length} unpaid</div></div>
+      <button className="btn btn-primary btn-sm" onClick={()=>{setPForm({Name:"",Phone:"",Role:"Batsman",Active:"Yes"});setShowAdd(true);}}>+ Add</button>
+    </div>
+
+    {/* Search bar */}
+    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search players..." style={{marginBottom:14,fontSize:14}}/>
+
+    {/* Player list — compact rows */}
+    <div className="card" style={{marginBottom:14}}>
+      {filtered.map((s,i)=>{
+        const initials=s.Name.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
+        const isLast=i===filtered.length-1;
+        return <div key={s.PlayerID} onClick={()=>setShowDetail(s)} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",borderBottom:isLast?"none":"1px solid var(--border)",cursor:"pointer",transition:"background .1s"}}
+          onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}
+          onMouseLeave={e=>e.currentTarget.style.background=""}>
+          <div className="player-avatar" style={{width:34,height:34,fontSize:12,flexShrink:0}}>{initials}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:600,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.Name}</div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>{s.Phone||"No phone"} · {s.Role||"—"}</div>
+          </div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontWeight:600,fontSize:14,color:s.balance>=0?"var(--green)":"var(--red)",fontFamily:"var(--mono)"}}>{s.balance>=0?"+":"-"}${Math.abs(Math.round(s.balance))}</div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>{s.gamesPlayed} game{s.gamesPlayed!==1?"s":""}</div>
+          </div>
+          <span style={{color:"var(--text3)",fontSize:16,marginLeft:4}}>›</span>
+        </div>;
+      })}
+      {filtered.length===0&&<div style={{padding:"24px",textAlign:"center",color:"var(--text3)",fontSize:13}}>No players found</div>}
+    </div>
+
+    {/* Player detail modal */}
+    {showDetail&&<Modal title={showDetail.Name} onClose={()=>setShowDetail(null)}>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,paddingBottom:16,borderBottom:"1px solid var(--border)"}}>
+        <div className="player-avatar" style={{width:44,height:44,fontSize:15}}>{showDetail.Name.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()}</div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:600,fontSize:16}}><InlineEdit value={showDetail.Name} onSave={v=>{updateField(showDetail,"Name",v);setShowDetail({...showDetail,Name:v});}}/></div>
+          <div style={{fontSize:13,color:"var(--text2)",marginTop:3}}><InlineEdit value={showDetail.Phone||""} onSave={v=>{updateField(showDetail,"Phone",v);setShowDetail({...showDetail,Phone:v});}} placeholder="+61 4xx xxx xxx"/></div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"flex-end"}}>
+          <span className={"badge "+(showDetail.Active==="Yes"?"g":"gray")}><InlineEdit value={showDetail.Active} onSave={v=>{updateField(showDetail,"Active",v);setShowDetail({...showDetail,Active:v});}} options={["Yes","No"]}/></span>
+          <span className={"badge "+rc(showDetail.Role)}><InlineEdit value={showDetail.Role||"Batsman"} onSave={v=>{updateField(showDetail,"Role",v);setShowDetail({...showDetail,Role:v});}} options={roles}/></span>
+        </div>
+      </div>
+
+      {/* Balance summary */}
+      <div style={{background:"var(--bg3)",borderRadius:10,padding:"12px 14px",marginBottom:14}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:5}}><span style={{color:"var(--text2)"}}>Advance paid</span><span style={{fontFamily:"var(--mono)",color:"var(--green)",fontWeight:600}}>${Math.round(showDetail.totalAdvance)}</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8}}><span style={{color:"var(--text2)"}}>Owed ({showDetail.gamesPlayed} game{showDetail.gamesPlayed!==1?"s":""})</span><span style={{fontFamily:"var(--mono)"}}>${Math.round(showDetail.totalOwed)}</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:15,fontWeight:600,borderTop:"1px solid var(--border)",paddingTop:8}}>
+          <span>Balance</span>
+          <span style={{color:showDetail.balance>=0?"var(--green)":"var(--red)",fontFamily:"var(--mono)"}}>{showDetail.balance>=0?"+":"-"}${Math.abs(Math.round(showDetail.balance))}</span>
+        </div>
+        <div className="bal-bar"><div className="bal-fill" style={{width:showDetail.totalOwed>0?Math.min(100,(showDetail.totalAdvance/showDetail.totalOwed)*100)+"%":"100%",background:showDetail.balance>=0?"var(--green)":"var(--amber)"}}/></div>
+      </div>
+
+      {/* Action buttons */}
+      <button className="btn btn-primary btn-full" style={{marginBottom:8}} onClick={()=>{setAdvForm({amount:"",date:melbNow(),note:""});setShowAdvance(showDetail);}}>+ Record payment</button>
+      <div style={{display:"flex",gap:8}}>
+        {showDetail.Phone&&<a className="btn btn-wa btn-sm" style={{flex:1,textDecoration:"none"}} href={waLink(showDetail.Phone,availMsg(showDetail))} target="_blank">Send availability link</a>}
+        {showDetail.Phone&&<a className="btn btn-wa btn-sm" style={{flex:1,textDecoration:"none"}} href={waLink(showDetail.Phone,balMsg(showDetail))} target="_blank">Send balance</a>}
+        {!showDetail.Phone&&<div style={{fontSize:12,color:"var(--text3)"}}>Add phone number above to enable WhatsApp</div>}
+      </div>
+    </Modal>}
+
+    {/* Add player modal */}
+    {showAdd&&<Modal title="Add Player" onClose={()=>setShowAdd(false)} footer={<><button className="btn btn-ghost" onClick={()=>setShowAdd(false)}>Cancel</button><button className="btn btn-primary" onClick={savePlayer} disabled={saving}>{saving?"…":"Add Player"}</button></>}>
+      <div className="form-group"><label className="form-label">Name *</label><input value={pForm.Name} onChange={e=>setPForm(f=>({...f,Name:e.target.value}))} placeholder="Player name"/></div>
+      <div className="form-group"><label className="form-label">Phone (WhatsApp)</label><input value={pForm.Phone} onChange={e=>setPForm(f=>({...f,Phone:e.target.value}))} placeholder="+61 4xx xxx xxx"/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Role</label><select value={pForm.Role} onChange={e=>setPForm(f=>({...f,Role:e.target.value}))}>{roles.map(r=><option key={r}>{r}</option>)}</select></div>
+        <div className="form-group"><label className="form-label">Status</label><select value={pForm.Active} onChange={e=>setPForm(f=>({...f,Active:e.target.value}))}><option value="Yes">Active</option><option value="No">Inactive</option></select></div>
+      </div>
+    </Modal>}
+
+    {/* Record payment modal */}
+    {showAdvance&&<Modal title={`Record payment — ${showAdvance.Name}`} onClose={()=>setShowAdvance(null)} footer={<><button className="btn btn-ghost" onClick={()=>setShowAdvance(null)}>Cancel</button><button className="btn btn-primary" onClick={saveAdvance} disabled={saving}>{saving?"…":"Save"}</button></>}>
+      <div style={{background:"var(--bg3)",borderRadius:8,padding:"10px 12px",marginBottom:14,fontSize:13,display:"flex",justifyContent:"space-between"}}>
+        <span style={{color:"var(--text2)"}}>Current balance</span>
+        <span style={{fontWeight:600,color:showAdvance.balance>=0?"var(--green)":"var(--red)",fontFamily:"var(--mono)"}}>{showAdvance.balance>=0?"+":"-"}${Math.abs(Math.round(showAdvance.balance))}</span>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Amount ($) *</label><input type="number" min="0" value={advForm.amount} onChange={e=>setAdvForm(f=>({...f,amount:e.target.value}))} placeholder="0"/></div>
+        <div className="form-group"><label className="form-label">Date</label><input type="date" value={advForm.date} onChange={e=>setAdvForm(f=>({...f,date:e.target.value}))}/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Note</label><input value={advForm.note} onChange={e=>setAdvForm(f=>({...f,note:e.target.value}))} placeholder="e.g. Season advance, Round 1 payment"/></div>
+    </Modal>}
+  </div>;
+}
+
+// ── MATCHES ──────────────────────────────────────────────────────
+function Matches({data,reload,notify}){
+  const {players=[],matches=[],availability={},payments={},config={}}=data;
+  const [tab,setTab]=useState("upcoming"),[showAdd,setShowAdd]=useState(false),[showCosts,setShowCosts]=useState(null),[showPostGame,setShowPostGame]=useState(null),[showAvail,setShowAvail]=useState(null);
+  const [mForm,setMForm]=useState({Date:"",Round:"",Venue:"",Opponent:""}),[cForm,setCForm]=useState({}),[saving,setSaving]=useState(false);
+  const today=(()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  const sorted=[...matches].sort((a,b)=>toDateStr(a.Date).localeCompare(toDateStr(b.Date)));
+  const list=tab==="upcoming"?sorted.filter(m=>toDateStr(m.Date)>=today):sorted.filter(m=>toDateStr(m.Date)<today);
+
+  const saveMatch=async()=>{ if(!mForm.Date||!mForm.Round)return; setSaving(true); try{await api.post({action:"addMatch",match:{MatchID:uid(),...mForm}});notify("Match added");setShowAdd(false);reload();}catch(e){alert(e.message);}finally{setSaving(false);} };
+  const saveCosts=async()=>{ setSaving(true); try{await api.post({action:"updateMatchCosts",matchId:showCosts.MatchID,costs:cForm});notify("Costs saved");setShowCosts(null);reload();}catch(e){alert(e.message);}finally{setSaving(false);} };
+  const updMatch=async(m,field,value)=>{ try{await api.post({action:"updateMatch",match:{...m,[field]:value}});notify("Saved");reload();}catch(e){alert(e.message);} };
+  const toggleAvail=async(matchId,playerId)=>{ const cur=(availability[matchId]||{})[playerId]||"tbd"; const next=cur==="tbd"?"yes":cur==="yes"?"no":"tbd"; try{await api.post({action:"setAvailability",playerId,matchId,status:next});reload();}catch(e){alert(e.message);} };
+
+  const postGameMsg=(m,p)=>{
+    const cnt=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+    const share=cnt>0?tc(m)/cnt:0;
+    const ps=calcStats([p],matches,availability,payments)[0];
+    return `Hey ${p.Name.split(" ")[0]},\n\n${m.Round} - Game costs\n${m.GroundHire>0?`Ground: $${m.GroundHire}\n`:""}${m.Balls>0?`Balls: $${m.Balls}\n`:""}${m.Umpire>0?`Umpire: $${m.Umpire}\n`:""}${m.MatchFee>0?`Match fee: $${m.MatchFee}\n`:""}${m.Extras>0?`Extras: $${m.Extras}\n`:""}\nTotal: $${Math.round(tc(m))} ÷ ${cnt} = *$${Math.round(share)} your share*\n\nBalance: ${ps.balance>=0?"$"+Math.round(ps.balance)+" in credit":"$"+Math.round(Math.abs(ps.balance))+" due"}${ps.balance<-0.5?`\n\nPlease pay via PayID: ${config?.PayID||"add PayID in Settings"}`:""}`;;
+  };
+
+  return <div className="page">
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+      <div><div className="page-title">Matches</div><div className="page-sub">{matches.length} total</div></div>
+      <button className="btn btn-primary btn-sm" onClick={()=>{setMForm({Date:"",Round:"",Venue:"",Opponent:""});setShowAdd(true);}}>+ Add</button>
+    </div>
+    <div className="tabs">
+      <button className={"tab-btn"+(tab==="upcoming"?" active":"")} onClick={()=>setTab("upcoming")}>Upcoming ({sorted.filter(m=>toDateStr(m.Date)>=today).length})</button>
+      <button className={"tab-btn"+(tab==="past"?" active":"")} onClick={()=>setTab("past")}>Past ({sorted.filter(m=>toDateStr(m.Date)<today).length})</button>
+    </div>
+    {list.map(m=>{
+      const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+      const totalC=tc(m);
+      return <div key={m.MatchID} className="card">
+        <div style={{padding:"13px 15px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div>
+              <div style={{fontWeight:600,fontSize:15}}><InlineEdit value={m.Round} onSave={v=>updMatch(m,"Round",v)}/></div>
+              <div style={{fontSize:12,color:"var(--text3)",fontFamily:"var(--mono)",marginTop:1}}><InlineEdit value={toDateStr(m.Date)} onSave={v=>updMatch(m,"Date",v)} type="date"/></div>
+            </div>
+            <span className={"badge "+(y>=(Number(data?.config?.MinPlayersNeeded)||11)?"g":y>=(Number(data?.config?.MinPlayersNeeded)||11)-2?"a":"gray")}>{y} avail</span>
+          </div>
+          <div style={{fontSize:13,color:"var(--text2)",display:"flex",gap:14,marginBottom:10,flexWrap:"wrap"}}>
+            <span>vs <InlineEdit value={m.Opponent||""} onSave={v=>updMatch(m,"Opponent",v)} placeholder="Opposition"/></span>
+            <span>📍 <InlineEdit value={m.Venue||""} onSave={v=>updMatch(m,"Venue",v)} placeholder="Venue"/></span>
+          </div>
+          {totalC>0&&<div style={{background:"var(--bg3)",borderRadius:8,padding:"7px 11px",marginBottom:10,fontSize:12,display:"flex",justifyContent:"space-between"}}>
+            <span style={{color:"var(--text2)"}}>Cost</span>
+            <span style={{fontFamily:"var(--mono)",fontWeight:600,color:"var(--accent)"}}>${Math.round(totalC)}{y>0?` · $${Math.round(totalC/y)}/player`:""}</span>
+          </div>}
+          <div className="btn-row">
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setCForm({groundHire:m.GroundHire||0,balls:m.Balls||0,umpire:m.Umpire||0,matchFee:m.MatchFee||0,extras:m.Extras||0});setShowCosts(m);}}>💰 Costs</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>setShowAvail(m)}>✓ Squad</button>
+            {totalC>0&&<button className="btn btn-wa btn-sm" onClick={()=>setShowPostGame(m)}>📤 Send costs</button>}
+          </div>
+        </div>
+      </div>;
+    })}
+
+    {showAdd&&<Modal title="Add Match" onClose={()=>setShowAdd(false)} footer={<><button className="btn btn-ghost" onClick={()=>setShowAdd(false)}>Cancel</button><button className="btn btn-primary" onClick={saveMatch} disabled={saving}>{saving?"…":"Add"}</button></>}>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Date *</label><input type="date" value={mForm.Date} onChange={e=>setMForm(f=>({...f,Date:e.target.value}))}/></div>
+        <div className="form-group"><label className="form-label">Round *</label><input value={mForm.Round} onChange={e=>setMForm(f=>({...f,Round:e.target.value}))} placeholder="Round 1"/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Venue</label><input value={mForm.Venue} onChange={e=>setMForm(f=>({...f,Venue:e.target.value}))} placeholder="Ground name"/></div>
+      <div className="form-group"><label className="form-label">Opposition</label><input value={mForm.Opponent} onChange={e=>setMForm(f=>({...f,Opponent:e.target.value}))} placeholder="Opponent team"/></div>
+    </Modal>}
+
+    {showCosts&&<Modal title={`Costs — ${showCosts.Round}`} onClose={()=>setShowCosts(null)} footer={<><button className="btn btn-ghost" onClick={()=>setShowCosts(null)}>Cancel</button><button className="btn btn-primary" onClick={saveCosts} disabled={saving}>{saving?"…":"Save"}</button></>}>
+      {[["groundHire","Ground hire"],["balls","Balls"],["umpire","Umpire"],["matchFee","Match fee"],["extras","Extras"]].map(([k,lbl])=><div key={k} className="form-group"><label className="form-label">{lbl} ($)</label><input type="number" min="0" value={cForm[k]||0} onChange={e=>setCForm(f=>({...f,[k]:e.target.value}))}/></div>)}
+      <div style={{background:"var(--bg3)",borderRadius:8,padding:"9px 12px",display:"flex",justifyContent:"space-between",fontSize:14}}>
+        <span style={{color:"var(--text2)"}}>Total</span><span style={{fontWeight:600,fontFamily:"var(--mono)"}}>${Math.round(Object.values(cForm).reduce((s,v)=>s+Number(v||0),0))}</span>
+      </div>
+    </Modal>}
+
+    {showAvail&&<Modal title={`Squad — ${showAvail.Round}`} onClose={()=>setShowAvail(null)}>
+      <div style={{fontSize:12,color:"var(--text2)",marginBottom:14}}>Tap a dot to toggle availability</div>
+      {players.filter(p=>p.Active==="Yes").map(p=>{
+        const val=(availability[showAvail.MatchID]||{})[p.PlayerID]||"tbd";
+        return <div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+          <span style={{flex:1,fontWeight:500}}>{p.Name}</span>
+          <div className={"avail-dot "+val} onClick={()=>toggleAvail(showAvail.MatchID,p.PlayerID)}>{val==="yes"?"✓":val==="no"?"✕":"?"}</div>
+        </div>;
+      })}
+    </Modal>}
+
+    {showPostGame&&<Modal title={`Send costs — ${showPostGame.Round}`} onClose={()=>setShowPostGame(null)}>
+      <div style={{fontSize:13,color:"var(--text2)",marginBottom:14}}>Opens WhatsApp with personalised message for each player who played.</div>
+      {players.filter(p=>(availability[showPostGame.MatchID]||{})[p.PlayerID]==="yes").map(p=>{
+        const msg=postGameMsg(showPostGame,p);
+        return <div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+          <span style={{flex:1,fontWeight:500}}>{p.Name}</span>
+          {p.Phone?<a className="btn btn-wa btn-sm" href={waLink(p.Phone,msg)} target="_blank">Send ↗</a>:<span style={{fontSize:11,color:"var(--text3)"}}>No phone</span>}
+        </div>;
+      })}
+    </Modal>}
+  </div>;
+}
+
+// ── AVAILABILITY ─────────────────────────────────────────────────
+function Availability({data,reload,notify}){
+  const {players=[],matches=[],availability={},config={}}=data;
+  const [saving,setSaving]=useState({});
+  const [showPlayer,setShowPlayer]=useState(null); // player modal for bulk editing
+  const [showMatch,setShowMatch]=useState(null);   // match modal for squad view
+  const melbToday2=(()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  const upcoming=[...matches].filter(m=>toDateStr(m.Date)>=melbToday2).sort((a,b)=>toDateStr(a.Date).localeCompare(toDateStr(b.Date)));
+  const past=[...matches].filter(m=>toDateStr(m.Date)<melbToday2).sort((a,b)=>toDateStr(b.Date).localeCompare(toDateStr(a.Date)));
+  const activePlayers=players.filter(p=>p.Active==="Yes");
+  const baseUrl=window.location.href.split("?")[0];
+
+  const setStatus=async(playerId,matchId,status)=>{
+    const key=matchId+"_"+playerId;
+    setSaving(s=>({...s,[key]:true}));
+    try{ await api.post({action:"setAvailability",playerId,matchId,status}); reload(); }
+    catch(e){alert(e.message);}
+    finally{setSaving(s=>({...s,[key]:false}));}
+  };
+
+  const copyAll=()=>{
+    const lines=activePlayers.map(p=>`${p.Name}: ${baseUrl}?player=${p.PlayerID}`);
+    navigator.clipboard.writeText(`Hey team,\n\nPlease mark your availability for ${config?.SeasonName||"the season"} using your personal link below:\n\n${lines.join("\n")}\n\nTap Yes or No for each game. Takes 30 seconds. Thanks!`).catch(()=>{});
+    notify("Group message copied!");
+  };
+
+  const yesCount=m=>Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+  const noCount=m=>Object.values(availability[m.MatchID]||{}).filter(v=>v==="no").length;
+  const tbdCount=m=>activePlayers.length-yesCount(m)-noCount(m);
+
+  return <div className="page">
+    <div className="page-title">Availability</div>
+    <div className="page-sub">Tap a player or match to update · overview grid is read-only</div>
+
+    <button className="btn btn-ghost btn-full" style={{marginBottom:14}} onClick={copyAll}>Copy bulk WhatsApp message</button>
+
+    {/* TWO WAYS TO EDIT */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-hdr"><span className="card-title">By player</span></div>
+        <div style={{maxHeight:360,overflowY:"auto"}}>
+          {activePlayers.map(p=>{
+            const yc=upcoming.filter(m=>(availability[m.MatchID]||{})[p.PlayerID]==="yes").length;
+            const nc=upcoming.filter(m=>(availability[m.MatchID]||{})[p.PlayerID]==="no").length;
+            const tbd=upcoming.length-yc-nc;
+            return <div key={p.PlayerID} onClick={()=>setShowPlayer(p)}
+              style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid var(--border)",cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}
+              onMouseLeave={e=>e.currentTarget.style.background=""}>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:500,fontSize:13}}>{p.Name}</div>
+                <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>
+                  <span style={{color:"var(--green)"}}>{yc}✓</span>
+                  <span style={{color:"var(--red)",marginLeft:6}}>{nc}✕</span>
+                  <span style={{color:"var(--text3)",marginLeft:6}}>{tbd}?</span>
+                </div>
+              </div>
+              <span style={{color:"var(--text3)",fontSize:14}}>›</span>
+            </div>;
+          })}
+        </div>
+      </div>
+
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-hdr"><span className="card-title">By match</span></div>
+        <div style={{maxHeight:360,overflowY:"auto"}}>
+          {upcoming.map(m=>{
+            const y=yesCount(m), n=noCount(m), t=tbdCount(m);
+            return <div key={m.MatchID} onClick={()=>setShowMatch(m)}
+              style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid var(--border)",cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}
+              onMouseLeave={e=>e.currentTarget.style.background=""}>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:500,fontSize:13}}>{m.Round}</div>
+                <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>{fmt(m.Date)}</div>
+              </div>
+              <div style={{display:"flex",gap:6,fontSize:11,fontWeight:600}}>
+                <span style={{color:"var(--green)"}}>{y}✓</span>
+                <span style={{color:"var(--red)"}}>{n}✕</span>
+                <span style={{color:"var(--text3)"}}>{t}?</span>
+              </div>
+              <span style={{color:"var(--text3)",fontSize:14}}>›</span>
+            </div>;
+          })}
+        </div>
+      </div>
+    </div>
+
+    {/* OVERVIEW GRID (read-only, visual only) */}
+    <div className="card-hdr" style={{background:"var(--bg2)",border:"1px solid var(--border)",borderBottom:"none",borderRadius:"var(--rl) var(--rl) 0 0",padding:"10px 14px"}}>
+      <span className="card-title">Overview grid</span>
+      <span style={{fontSize:11,color:"var(--text3)"}}>Read-only · tap player/match above to edit</span>
+    </div>
+    <div style={{overflowX:"auto",background:"var(--bg2)",border:"1px solid var(--border)",borderTop:"none",borderRadius:"0 0 var(--rl) var(--rl)",WebkitOverflowScrolling:"touch",marginBottom:14}}>
+      <table style={{borderCollapse:"collapse",minWidth:420}}>
+        <thead><tr>
+          <th style={{padding:"8px 12px 8px 14px",textAlign:"left",fontSize:11,color:"var(--text3)",fontWeight:600,textTransform:"uppercase",position:"sticky",left:0,background:"var(--bg2)",whiteSpace:"nowrap",borderBottom:"1px solid var(--border)"}}>Player</th>
+          {upcoming.map(m=>{ const y=yesCount(m); return <th key={m.MatchID} style={{padding:"6px 5px",textAlign:"center",fontSize:10,color:"var(--text3)",minWidth:44,borderBottom:"1px solid var(--border)"}}>
+            <div style={{fontWeight:600}}>{m.Round.replace("Round ","R")}</div>
+            <div style={{fontSize:9,marginTop:1}}>{fmt(m.Date)}</div>
+            <div style={{color:y>=(Number(config?.MinPlayersNeeded)||11)?"var(--green)":y>=(Number(config?.MinPlayersNeeded)||11)-2?"var(--amber)":"var(--text3)",marginTop:1,fontWeight:600}}>{y}✓</div>
+          </th>; })}
+        </tr></thead>
+        <tbody>
+          {activePlayers.map(p=><tr key={p.PlayerID}>
+            <td style={{padding:"6px 12px 6px 14px",fontWeight:500,fontSize:12,whiteSpace:"nowrap",position:"sticky",left:0,background:"var(--bg2)",cursor:"pointer",color:"var(--accent)"}}
+              onClick={()=>setShowPlayer(p)}>{p.Name.split(" ")[0]}</td>
+            {upcoming.map(m=>{ const val=(availability[m.MatchID]||{})[p.PlayerID]||"tbd";
+              return <td key={m.MatchID} style={{padding:"4px 5px",textAlign:"center"}}>
+                <div className={"avail-dot "+val} style={{width:26,height:26,fontSize:11,cursor:"default"}}>{val==="yes"?"✓":val==="no"?"✕":"?"}</div>
+              </td>; })}
+          </tr>)}
+        </tbody>
+      </table>
+    </div>
+
+    {/* PLAYER MODAL — bulk set availability */}
+    {showPlayer&&<Modal title={showPlayer.Name} onClose={()=>setShowPlayer(null)}>
+      <div style={{fontSize:12,color:"var(--text2)",marginBottom:14}}>Tap Yes or No for each game. Changes save instantly.</div>
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={async()=>{
+          for(const m of upcoming){ await api.post({action:"setAvailability",playerId:showPlayer.PlayerID,matchId:m.MatchID,status:"yes"}); }
+          reload(); notify(`${showPlayer.Name} marked available for all games`);
+        }}>Mark all Yes</button>
+        <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={async()=>{
+          for(const m of upcoming){ await api.post({action:"setAvailability",playerId:showPlayer.PlayerID,matchId:m.MatchID,status:"no"}); }
+          reload(); notify(`${showPlayer.Name} marked unavailable for all games`);
+        }}>Mark all No</button>
+      </div>
+      {upcoming.map(m=>{
+        const cur=(availability[m.MatchID]||{})[showPlayer.PlayerID]||"tbd";
+        const key=m.MatchID+"_"+showPlayer.PlayerID;
+        return <div key={m.MatchID} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:500,fontSize:14}}>{m.Round}</div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>{fmtFull(m.Date)}{m.Venue?` · ${m.Venue}`:""}</div>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setStatus(showPlayer.PlayerID,m.MatchID,"yes")} disabled={saving[key]}
+              style={{padding:"6px 14px",borderRadius:8,border:"1.5px solid",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)",
+                background:cur==="yes"?"var(--gbg)":"var(--bg3)",color:cur==="yes"?"var(--green)":"var(--text2)",borderColor:cur==="yes"?"var(--gborder)":"var(--border)"}}>
+              {saving[key]?"…":"✓ Yes"}
+            </button>
+            <button onClick={()=>setStatus(showPlayer.PlayerID,m.MatchID,"no")} disabled={saving[key]}
+              style={{padding:"6px 14px",borderRadius:8,border:"1.5px solid",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)",
+                background:cur==="no"?"var(--rbg)":"var(--bg3)",color:cur==="no"?"var(--red)":"var(--text2)",borderColor:cur==="no"?"var(--rborder)":"var(--border)"}}>
+              {saving[key]?"…":"✕ No"}
+            </button>
+          </div>
+        </div>;
+      })}
+      {upcoming.length===0&&<div style={{color:"var(--text3)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No upcoming matches</div>}
+    </Modal>}
+
+    {/* MATCH MODAL — set all players for one match */}
+    {showMatch&&<Modal title={`${showMatch.Round} — ${fmt(showMatch.Date)}`} onClose={()=>setShowMatch(null)}>
+      <div style={{fontSize:12,color:"var(--text2)",marginBottom:14}}>{fmtFull(showMatch.Date)}{showMatch.Venue?` · ${showMatch.Venue}`:""}</div>
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={async()=>{
+          for(const p of activePlayers){ await api.post({action:"setAvailability",playerId:p.PlayerID,matchId:showMatch.MatchID,status:"yes"}); }
+          reload(); notify("All players marked available");
+        }}>All available</button>
+        <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={async()=>{
+          for(const p of activePlayers){ await api.post({action:"setAvailability",playerId:p.PlayerID,matchId:showMatch.MatchID,status:"no"}); }
+          reload(); notify("All players marked unavailable");
+        }}>All unavailable</button>
+      </div>
+      {activePlayers.map(p=>{
+        const cur=(availability[showMatch.MatchID]||{})[p.PlayerID]||"tbd";
+        const key=showMatch.MatchID+"_"+p.PlayerID;
+        return <div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid var(--border)"}}>
+          <span style={{flex:1,fontWeight:500,fontSize:14}}>{p.Name}</span>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setStatus(p.PlayerID,showMatch.MatchID,"yes")} disabled={saving[key]}
+              style={{padding:"6px 14px",borderRadius:8,border:"1.5px solid",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)",
+                background:cur==="yes"?"var(--gbg)":"var(--bg3)",color:cur==="yes"?"var(--green)":"var(--text2)",borderColor:cur==="yes"?"var(--gborder)":"var(--border)"}}>
+              {saving[key]?"…":"✓"}
+            </button>
+            <button onClick={()=>setStatus(p.PlayerID,showMatch.MatchID,"no")} disabled={saving[key]}
+              style={{padding:"6px 14px",borderRadius:8,border:"1.5px solid",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--font)",
+                background:cur==="no"?"var(--rbg)":"var(--bg3)",color:cur==="no"?"var(--red)":"var(--text2)",borderColor:cur==="no"?"var(--rborder)":"var(--border)"}}>
+              {saving[key]?"…":"✕"}
+            </button>
+          </div>
+        </div>;
+      })}
+    </Modal>}
+
+    {/* Individual send links */}
+    <div className="section-hdr"><span className="section-title">Send individual links</span></div>
+    {activePlayers.map(p=>{ const link=`${baseUrl}?player=${p.PlayerID}`; const msg=`Hey ${p.Name.split(" ")[0]}, please mark your availability: ${link}`;
+      return <div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+        <span style={{flex:1,fontWeight:500,fontSize:14}}>{p.Name}</span>
+        {p.Phone?<a className="btn btn-wa btn-sm" href={waLink(p.Phone,msg)} target="_blank">Send</a>
+          :<button className="btn btn-ghost btn-sm" onClick={()=>{navigator.clipboard.writeText(link).catch(()=>{}); notify(`Link copied for ${p.Name}`);}}>Copy link</button>}
+      </div>; })}
+  </div>;
+}
+
+// ── FINANCE ──────────────────────────────────────────────────────
+function Finance({data,reload,notify}){
+  const {players=[],matches=[],availability={},payments={},config={}}=data;
+  const [tab,setTab]=useState("purse");
+  const [showPlayerDetail,setShowPlayerDetail]=useState(null);
+  const [showSettleMatch,setShowSettleMatch]=useState(null);
+  const [saving,setSaving]=useState(false);
+  const [payAmt,setPayAmt]=useState("");
+  const [payNote,setPayNote]=useState("");
+  const melbNow=()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+
+  // Load settled matches from localStorage (simple flag, not financial data)
+  const [settledMatches,setSettledMatches]=useState(()=>{
+    try{ return JSON.parse(localStorage.getItem("mcc_settled_v1")||"[]"); }catch(e){ return []; }
+  });
+  const toggleSettle=(matchId)=>{
+    const next=settledMatches.includes(matchId)?settledMatches.filter(x=>x!==matchId):[...settledMatches,matchId];
+    setSettledMatches(next);
+    localStorage.setItem("mcc_settled_v1",JSON.stringify(next));
+    notify(settledMatches.includes(matchId)?"Match unsettled":"Match marked as settled");
+  };
+
+  const today=melbNow();
+  const pastMatches=matches.filter(m=>toDateStr(m.Date)<today);
+  const stats=calcStats(players,matches,availability,payments);
+
+  // Team purse = total money collected from all players
+  const teamPurse=stats.reduce((s,p)=>s+p.totalAdvance,0);
+  // Total match costs (past matches only)
+  const totalCosts=pastMatches.reduce((s,m)=>s+tc(m),0);
+  // Unsettled = past matches not yet settled
+  const unsettledMatches=pastMatches.filter(m=>!settledMatches.includes(m.MatchID));
+  const unsettledCosts=unsettledMatches.reduce((s,m)=>s+tc(m),0);
+  const settledCosts=pastMatches.filter(m=>settledMatches.includes(m.MatchID)).reduce((s,m)=>s+tc(m),0);
+  // Per player outstanding
+  const totalDue=stats.reduce((s,p)=>s+(p.balance<0?Math.abs(p.balance):0),0);
+  const currentPurse=teamPurse-settledCosts;
+
+  const sortedStats=[...stats].sort((a,b)=>a.balance-b.balance); // most negative first
+
+  const balMsg=s=>`Hey ${s.Name.split(" ")[0]},\n\nYour MCC cricket summary:\nGames played: ${s.gamesPlayed}\nOwed: $${Math.round(s.totalOwed)}\nAdvance paid: $${Math.round(s.totalAdvance)}\nBalance: ${s.balance>=0?"$"+Math.round(s.balance)+" in credit":"$"+Math.round(Math.abs(s.balance))+" due"}${s.balance<-0.5?`\n\nPlease pay via PayID: ${config?.PayID||"add PayID in Settings"}`:""}`;
+
+  const saveAdvance=async(p,amount,note)=>{
+    setSaving(true);
+    try{
+      await api.post({action:"addPayment",playerId:p.PlayerID,amount:Number(amount),date:melbNow(),note:note||"Payment"});
+      notify(`$${amount} recorded for ${p.Name}`);
+      setShowPlayerDetail(null);
+      reload();
+    }catch(e){alert(e.message);}finally{setSaving(false);}
+  };
+
+  return <div className="page">
+    <div className="page-title">Finance</div>
+    <div className="page-sub">Team purse, match costs & player balances</div>
+
+    {/* ── TEAM PURSE BANNER ── */}
+    <div style={{background:"linear-gradient(135deg,rgba(129,140,248,0.12),var(--bg3))",border:"1px solid var(--acborder)",borderRadius:"var(--rl)",padding:"16px",marginBottom:16}}>
+      <div style={{fontSize:11,fontWeight:600,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:8}}>Team Purse</div>
+      <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4}}>
+        <div style={{fontSize:36,fontWeight:600,letterSpacing:"-1.5px",color:currentPurse>=0?"var(--green)":"var(--red)"}}>${Math.round(currentPurse)}</div>
+        <div style={{fontSize:13,color:"var(--text2)"}}>remaining</div>
+      </div>
+      <div style={{height:6,background:"var(--bg4)",borderRadius:3,overflow:"hidden",marginBottom:10}}>
+        <div style={{height:"100%",borderRadius:3,background:currentPurse>=0?"var(--green)":"var(--red)",width:teamPurse>0?Math.min(100,Math.max(0,(currentPurse/teamPurse)*100))+"%":"0%",transition:"width .4s"}}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+        <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"9px 10px"}}>
+          <div style={{fontSize:16,fontWeight:600,color:"var(--green)"}}>${Math.round(teamPurse)}</div>
+          <div style={{fontSize:10,color:"var(--text3)",marginTop:2}}>COLLECTED</div>
+        </div>
+        <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"9px 10px"}}>
+          <div style={{fontSize:16,fontWeight:600,color:"var(--amber)"}}>${Math.round(settledCosts)}</div>
+          <div style={{fontSize:10,color:"var(--text3)",marginTop:2}}>SPENT</div>
+        </div>
+        <div style={{background:"rgba(0,0,0,0.2)",borderRadius:8,padding:"9px 10px"}}>
+          <div style={{fontSize:16,fontWeight:600,color:"var(--red)"}}>${Math.round(totalDue)}</div>
+          <div style={{fontSize:10,color:"var(--text3)",marginTop:2}}>STILL DUE</div>
+        </div>
+      </div>
+    </div>
+
+    {/* ── TABS ── */}
+    <div className="tabs">
+      <button className={"tab-btn"+(tab==="purse"?" active":"")} onClick={()=>setTab("purse")}>Players</button>
+      <button className={"tab-btn"+(tab==="matches"?" active":"")} onClick={()=>setTab("matches")}>Match costs</button>
+    </div>
+
+    {/* ── PLAYERS TAB ── */}
+    {tab==="purse"&&<>
+      <div className="card">
+        {sortedStats.map((s,i)=>{
+          const isLast=i===sortedStats.length-1;
+          const pct=s.totalOwed>0?Math.min(100,(s.totalAdvance/s.totalOwed)*100):100;
+          return <div key={s.PlayerID} onClick={()=>{setShowPlayerDetail(s);setPayAmt("");setPayNote("");}}
+            style={{padding:"11px 14px",borderBottom:isLast?"none":"1px solid var(--border)",cursor:"pointer"}}
+            onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.02)"}
+            onMouseLeave={e=>e.currentTarget.style.background=""}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5}}>
+              <span style={{fontWeight:600,fontSize:14,flex:1}}>{s.Name}</span>
+              <span style={{fontSize:11,color:"var(--text3)"}}>{s.gamesPlayed} game{s.gamesPlayed!==1?"s":""}</span>
+              <span style={{fontWeight:700,fontSize:14,fontFamily:"var(--mono)",color:s.balance>=0?"var(--green)":"var(--red)",minWidth:50,textAlign:"right"}}>{s.balance>=0?"+":"-"}${Math.abs(Math.round(s.balance))}</span>
+              <span style={{color:"var(--text3)",fontSize:13}}>›</span>
+            </div>
+            <div style={{height:3,background:"var(--bg3)",borderRadius:2,overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:2,background:s.balance>=0?"var(--green)":"var(--amber)",width:pct+"%",transition:"width .3s"}}/>
+            </div>
+          </div>;
+        })}
+      </div>
+    </>}
+
+    {/* ── MATCH COSTS TAB ── */}
+    {tab==="matches"&&<>
+      {pastMatches.length===0&&<div style={{color:"var(--text3)",fontSize:13,textAlign:"center",padding:"32px 0"}}>No past matches yet</div>}
+      {pastMatches.sort((a,b)=>toDateStr(b.Date).localeCompare(toDateStr(a.Date))).map(m=>{
+        const totalC=tc(m);
+        const y=Object.values(availability[m.MatchID]||{}).filter(v=>v==="yes").length;
+        const cpp=y>0?Math.round(totalC/y):0;
+        const isSettled=settledMatches.includes(m.MatchID);
+        const playersWhoOwe=stats.filter(p=>{
+          const played=(availability[m.MatchID]||{})[p.PlayerID]==="yes";
+          return played && p.balance<-0.5;
+        });
+        return <div key={m.MatchID} className="card" style={{marginBottom:10,opacity:isSettled?.6:1}}>
+          <div style={{padding:"12px 14px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontWeight:600,fontSize:14}}>{m.Round}</span>
+                  {isSettled&&<span className="badge g" style={{fontSize:10}}>Settled</span>}
+                </div>
+                <div style={{fontSize:11,color:"var(--text3)",marginTop:1,fontFamily:"var(--mono)"}}>{fmt(m.Date)}{m.Opponent?` · vs ${m.Opponent}`:""}</div>
+              </div>
+              {totalC>0&&<div style={{textAlign:"right"}}>
+                <div style={{fontWeight:600,fontFamily:"var(--mono)",color:"var(--accent)"}}>${Math.round(totalC)}</div>
+                <div style={{fontSize:11,color:"var(--text3)"}}>{y} players · ${cpp}/each</div>
+              </div>}
+            </div>
+            {totalC>0&&<div style={{fontSize:12,color:"var(--text2)",display:"flex",gap:10,flexWrap:"wrap",marginBottom:10}}>
+              {m.GroundHire>0&&<span>Ground ${m.GroundHire}</span>}
+              {m.Balls>0&&<span>Balls ${m.Balls}</span>}
+              {m.Umpire>0&&<span>Umpire ${m.Umpire}</span>}
+              {m.MatchFee>0&&<span>Fee ${m.MatchFee}</span>}
+              {m.Extras>0&&<span>Extras ${m.Extras}</span>}
+            </div>}
+            {!isSettled&&playersWhoOwe.length>0&&<div style={{background:"var(--rbg)",borderRadius:8,padding:"7px 10px",marginBottom:10,fontSize:12,color:"var(--red)"}}>
+              {playersWhoOwe.length} player{playersWhoOwe.length!==1?"s":""} still owe from this match: {playersWhoOwe.map(p=>p.Name.split(" ")[0]).join(", ")}
+            </div>}
+            {totalC>0&&<div style={{display:"flex",gap:8}}>
+              <button className={"btn btn-sm "+(isSettled?"btn-ghost":"btn-primary")} style={{flex:1}} onClick={()=>toggleSettle(m.MatchID)}>
+                {isSettled?"Unsettle":"Mark as settled"}
+              </button>
+              <button className="btn btn-ghost btn-sm" style={{flex:1}} onClick={()=>setShowSettleMatch(m)}>View players</button>
+            </div>}
+          </div>
+        </div>;
+      })}
+
+
+    </>}
+
+    {/* ── PLAYER DETAIL MODAL ── */}
+    {showPlayerDetail&&<Modal title={showPlayerDetail.Name} onClose={()=>setShowPlayerDetail(null)}
+      footer={<><button className="btn btn-ghost" onClick={()=>setShowPlayerDetail(null)}>Close</button>
+        {payAmt&&<button className="btn btn-primary" onClick={()=>saveAdvance(showPlayerDetail,payAmt,payNote)} disabled={saving}>{saving?"…":"Record $"+payAmt}</button>}</>}>
+      <div style={{background:"var(--bg3)",borderRadius:10,padding:"14px",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:13}}>
+          <span style={{color:"var(--text2)"}}>Games played</span><span style={{fontWeight:600}}>{showPlayerDetail.gamesPlayed}</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:13}}>
+          <span style={{color:"var(--text2)"}}>Total owed</span><span style={{fontFamily:"var(--mono)"}}>${Math.round(showPlayerDetail.totalOwed)}</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,fontSize:13}}>
+          <span style={{color:"var(--text2)"}}>Advance paid</span><span style={{fontFamily:"var(--mono)",color:"var(--green)"}}>${Math.round(showPlayerDetail.totalAdvance)}</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:16,fontWeight:700,borderTop:"1px solid var(--border)",paddingTop:10}}>
+          <span>Balance</span>
+          <span style={{color:showPlayerDetail.balance>=0?"var(--green)":"var(--red)",fontFamily:"var(--mono)"}}>{showPlayerDetail.balance>=0?"+":"-"}${Math.abs(Math.round(showPlayerDetail.balance))}</span>
+        </div>
+      </div>
+      <div style={{marginBottom:14}}>
+        <label className="form-label">Record payment</label>
+        <div style={{display:"flex",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+          {[Math.abs(Math.round(showPlayerDetail.balance)),20,50,100].filter((v,i,a)=>v>0&&a.indexOf(v)===i).map(v=>
+            <button key={v} className="btn btn-ghost btn-sm" onClick={()=>setPayAmt(String(v))} style={{background:payAmt==String(v)?"var(--acbg)":"",borderColor:payAmt==String(v)?"var(--acborder)":""}}>${v}</button>
+          )}
+        </div>
+        <div className="form-row">
+          <input type="number" min="0" value={payAmt} onChange={e=>setPayAmt(e.target.value)} placeholder="Amount ($)"/>
+          <input value={payNote} onChange={e=>setPayNote(e.target.value)} placeholder="Note (optional)"/>
+        </div>
+      </div>
+      {showPlayerDetail.Phone&&<a className="btn btn-wa btn-full" href={waLink(showPlayerDetail.Phone,balMsg(showPlayerDetail))} target="_blank" style={{textDecoration:"none"}}>Send balance via WhatsApp</a>}
+    </Modal>}
+
+    {/* ── MATCH PLAYERS MODAL ── */}
+    {showSettleMatch&&<Modal title={`${showSettleMatch.Round} — players`} onClose={()=>setShowSettleMatch(null)}>
+      {stats.filter(p=>(availability[showSettleMatch.MatchID]||{})[p.PlayerID]==="yes").map(p=>{
+        const share=Math.round(tc(showSettleMatch)/(Object.values(availability[showSettleMatch.MatchID]||{}).filter(v=>v==="yes").length||1));
+        return <div key={p.PlayerID} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+          <span style={{flex:1,fontWeight:500}}>{p.Name}</span>
+          <span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--text2)"}}>${share}/game</span>
+          <span style={{fontFamily:"var(--mono)",fontWeight:600,color:p.balance>=0?"var(--green)":"var(--red)",minWidth:60,textAlign:"right"}}>{p.balance>=0?"+":"-"}${Math.abs(Math.round(p.balance))}</span>
+        </div>;
+      })}
+    </Modal>}
+  </div>;
+}
+
+function Settings({data,reload,notify}){
+  const {config={},players=[],matches=[]}=data;
+  const [showNewSeason,setShowNewSeason]=useState(false),[nsName,setNsName]=useState(""),[saving,setSaving]=useState(false);
+  const updCfg=async(key,value)=>{ try{await api.post({action:"updateConfig",key,value});notify("Saved");reload();}catch(e){alert(e.message);} };
+  const createSeason=async()=>{ if(!nsName.trim())return; setSaving(true); try{await api.post({action:"createSeason",seasonName:nsName});notify("New season created!");setShowNewSeason(false);reload();}catch(e){alert(e.message);}finally{setSaving(false);} };
+  const cfgFields=[["SeasonName","Season name"],["ClubName","Club name"],["MinPlayersNeeded","Min players needed"],["TargetSquadSize","Target squad size"],["PayID","PayID (phone number)"],["CaptainName","Captain name"],["CaptainPhone","Captain phone"]];
+
+  return <div className="page">
+    <div className="page-title">Settings</div>
+    <div className="page-sub">Season config · tap any value to edit</div>
+    <div className="card" style={{marginBottom:14}}>
+      <div className="card-hdr"><span className="card-title">Season config</span></div>
+      {cfgFields.map(([k,lbl])=><div key={k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 15px",borderBottom:"1px solid var(--border)"}}>
+        <span style={{fontSize:12,color:"var(--text2)",fontWeight:500,flexShrink:0,marginRight:12}}>{lbl}</span>
+        <span style={{fontSize:14,textAlign:"right"}}><InlineEdit value={String(config[k]||"")} onSave={v=>updCfg(k,v)} placeholder="tap to set"/></span>
+      </div>)}
+    </div>
+    <div className="card">
+      <div className="card-hdr"><span className="card-title">New season</span></div>
+      <div style={{padding:15}}>
+        <div style={{fontSize:13,color:"var(--text2)",marginBottom:12,lineHeight:1.7}}>Clears schedule, availability, and payments — keeps players. Old data stays in the sheet.</div>
+        <div style={{display:"flex",gap:10,marginBottom:12}}>
+          <div style={{background:"var(--bg3)",borderRadius:8,padding:"9px 12px",flex:1,textAlign:"center"}}><div style={{fontSize:20,fontWeight:600}}>{players.length}</div><div style={{fontSize:10,color:"var(--text3)"}}>PLAYERS KEPT</div></div>
+          <div style={{background:"var(--bg3)",borderRadius:8,padding:"9px 12px",flex:1,textAlign:"center"}}><div style={{fontSize:20,fontWeight:600}}>{matches.length}</div><div style={{fontSize:10,color:"var(--text3)"}}>MATCHES CLEARED</div></div>
+        </div>
+        <button className="btn btn-danger btn-full" onClick={()=>setShowNewSeason(true)}>🔄 Start new season</button>
+      </div>
+    </div>
+    {showNewSeason&&<Modal title="Start New Season" onClose={()=>setShowNewSeason(false)} footer={<><button className="btn btn-ghost" onClick={()=>setShowNewSeason(false)}>Cancel</button><button className="btn btn-primary" onClick={createSeason} disabled={saving}>{saving?"…":"Create"}</button></>}>
+      <div style={{fontSize:13,color:"var(--text2)",marginBottom:14,lineHeight:1.7}}>This cannot be undone. All match, availability, and payment data will be cleared.</div>
+      <div className="form-group"><label className="form-label">Season name *</label><input value={nsName} onChange={e=>setNsName(e.target.value)} placeholder="e.g. Winter 2026"/></div>
+    </Modal>}
+  </div>;
+}
+
+
+// ── EXTRAS (non-match expense splitter) ─────────────────────────
+function Extras({data,reload,notify}){
+  const {players=[],config={}}=data;
+  const expenses=data.extras||[];
+  const [showAdd,setShowAdd]=useState(false);
+  const [showManage,setShowManage]=useState(null); // expense being managed (send/track payments)
+  const [saving,setSaving]=useState(false);
+  const melbNow=()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Australia/Melbourne'})); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  const [eForm,setEForm]=useState({title:"",amount:"",date:melbNow(),note:""});
+  const [involved,setInvolved]=useState([]);
+  const [overrides,setOverrides]=useState({});
+
+  // Extra payments stored in localStorage keyed by extraId+playerId
+  const [extraPayments,setExtraPayments]=useState(()=>{
+    try{ return JSON.parse(localStorage.getItem("mcc_extra_payments_v1")||"{}"); }catch(e){ return {}; }
+  });
+  const saveExtraPayments=(map)=>{ localStorage.setItem("mcc_extra_payments_v1",JSON.stringify(map)); setExtraPayments(map); };
+  const isPaid=(extraId,playerId)=>!!(extraPayments[extraId+"_"+playerId]);
+  const togglePaid=(extraId,playerId,share)=>{
+    const key=extraId+"_"+playerId;
+    const next={...extraPayments};
+    if(next[key]){ delete next[key]; notify("Marked unpaid"); }
+    else{ next[key]={amount:share,date:melbNow()}; notify("Marked as paid"); }
+    saveExtraPayments(next);
+  };
+  const paidCount=(exp)=>(Array.isArray(exp.involved)?exp.involved:[]).filter(pid=>isPaid(exp.id,pid)).length;
+  const paidAmount=(exp)=>(Array.isArray(exp.involved)?exp.involved:[]).filter(pid=>isPaid(exp.id,pid)).reduce((s,pid)=>s+Number((exp.shares||{})[pid]||0),0);
+
+  const activePlayers=players.filter(p=>p.Active==="Yes");
+  const toggleInvolved=(pid)=>setInvolved(prev=>prev.includes(pid)?prev.filter(x=>x!==pid):[...prev,pid]);
+
+  const calcShares=(amount,involvedIds,overrideMap)=>{
+    const total=Number(amount)||0;
+    if(!Array.isArray(involvedIds)||involvedIds.length===0) return {};
+    const totalOverrides=involvedIds.reduce((s,pid)=>s+(Number(overrideMap[pid])||0),0);
+    const remaining=Math.max(0,total-totalOverrides);
+    const evenCount=involvedIds.filter(pid=>!overrideMap[pid]).length;
+    const evenShare=evenCount>0?Number((remaining/evenCount).toFixed(1)):0;
+    return Object.fromEntries(involvedIds.map(pid=>[pid,overrideMap[pid]?Number(overrideMap[pid]):evenShare]));
+  };
+
+  const normExp=(exp)=>{
+    exp.involved=Array.isArray(exp.Involved)?exp.Involved:Array.isArray(exp.involved)?exp.involved:(typeof (exp.Involved||exp.involved)==='string'?JSON.parse(exp.Involved||exp.involved||'[]'):[]);
+    exp.shares=typeof (exp.Shares||exp.shares)==='string'?JSON.parse(exp.Shares||exp.shares||'{}'):(exp.Shares||exp.shares||{});
+    exp.amount=exp.Amount||exp.amount||0;
+    exp.title=exp.Title||exp.title||'';
+    exp.date=exp.Date||exp.date||'';
+    exp.note=exp.Note||exp.note||'';
+    exp.id=exp.ExtraID||exp.id||'';
+    return exp;
+  };
+
+  const addExpense=async()=>{
+    if(!eForm.title.trim()||!eForm.amount||involved.length===0)return;
+    setSaving(true);
+    const shares=calcShares(eForm.amount,involved,overrides);
+    const exp={id:"ex_"+Math.random().toString(36).slice(2,9),title:eForm.title,amount:Number(eForm.amount),date:eForm.date,note:eForm.note,involved,overrides:{...overrides},shares};
+    try{
+      await api.post({action:"addExtra",extra:exp});
+      notify(`${eForm.title} added — $${Number(eForm.amount).toFixed(1)} split ${involved.length} ways`);
+      setShowAdd(false);
+      setEForm({title:"",amount:"",date:melbNow(),note:""});
+      setInvolved([]);setOverrides({});
+      reload();
+    }catch(e){alert(e.message);}
+    finally{setSaving(false);}
+  };
+
+  const deleteExpense=async(id)=>{
+    if(!confirm("Delete this expense?"))return;
+    try{
+      await api.post({action:"deleteExtra",extraId:id});
+      // also clear payments for this expense
+      const next={...extraPayments};
+      Object.keys(next).filter(k=>k.startsWith(id+"_")).forEach(k=>delete next[k]);
+      saveExtraPayments(next);
+      notify("Expense deleted");setShowManage(null);reload();
+    }catch(e){alert(e.message);}
+  };
+
+  const buildMsg=(exp,pid)=>{
+    const p=players.find(x=>x.PlayerID===pid);
+    if(!p)return"";
+    const share=(exp.shares||{})[pid]||0;
+    return `Hey ${p.Name.split(" ")[0]},\n\n${exp.title} — ${fmt(exp.date||exp.Date)}\nTotal: $${Number(exp.amount).toFixed(1)}\nPeople: ${exp.involved.length}\nYour share: $${Number(share).toFixed(1)}\n${exp.note?`Note: ${exp.note}\n`:""}\nPlease pay via PayID: ${config?.PayID||"add PayID in Settings"}\n\nThanks.`;
+  };
+
+  const previewShares=calcShares(eForm.amount,involved,overrides);
+  const totalExpenses=(data.extras||[]).reduce((s,e)=>s+Number(e.Amount||e.amount||0),0);
+  const normExpenses=expenses.filter(e=>e&&(e.ExtraID||e.id)).map(normExp);
+
+  return <div className="page">
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+      <div><div className="page-title">Extras</div><div className="page-sub">Non-match expenses — pizza, nets, gear etc.</div></div>
+      <button className="btn btn-primary btn-sm" onClick={()=>{setEForm({title:"",amount:"",date:melbNow(),note:""});setInvolved([]);setOverrides({});setShowAdd(true);}}>+ Add</button>
+    </div>
+
+    {normExpenses.length>0&&<div style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:"var(--rl)",padding:"12px 14px",marginBottom:14,display:"flex",gap:20}}>
+      <div><div style={{fontSize:20,fontWeight:600,color:"var(--accent)"}}>{normExpenses.length}</div><div style={{fontSize:10,color:"var(--text3)"}}>EXPENSES</div></div>
+      <div><div style={{fontSize:20,fontWeight:600}}>${Number(totalExpenses).toFixed(1)}</div><div style={{fontSize:10,color:"var(--text3)"}}>TOTAL</div></div>
+      <div><div style={{fontSize:20,fontWeight:600,color:"var(--green)"}}>${normExpenses.reduce((s,e)=>s+paidAmount(e),0).toFixed(1)}</div><div style={{fontSize:10,color:"var(--text3)"}}>COLLECTED</div></div>
+      <div><div style={{fontSize:20,fontWeight:600,color:"var(--red)"}}>${Math.max(0,totalExpenses-normExpenses.reduce((s,e)=>s+paidAmount(e),0)).toFixed(1)}</div><div style={{fontSize:10,color:"var(--text3)"}}>OUTSTANDING</div></div>
+    </div>}
+
+    {normExpenses.length===0&&<div style={{textAlign:"center",color:"var(--text3)",padding:"40px 0"}}>
+      <div style={{fontSize:32,marginBottom:10}}>🍕</div>
+      <div style={{fontSize:14}}>No extras yet</div>
+    </div>}
+
+    {normExpenses.map(exp=>{
+      const pc=paidCount(exp), total=exp.involved.length, pa=paidAmount(exp);
+      const allPaid=pc===total&&total>0;
+      return <div key={exp.id} className="card" style={{marginBottom:10,opacity:allPaid?.75:1}}>
+        <div style={{padding:"13px 14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontWeight:600,fontSize:15}}>{exp.title}</span>
+                {allPaid&&<span className="badge g" style={{fontSize:10}}>Settled</span>}
+              </div>
+              <div style={{fontSize:12,color:"var(--text3)",marginTop:1}}>{fmt(exp.date)}{exp.note?` · ${exp.note}`:""}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontWeight:600,color:"var(--accent)",fontFamily:"var(--mono)"}}>${Number(exp.amount).toFixed(1)}</div>
+              <div style={{fontSize:11,color:"var(--text3)"}}>{pc}/{total} paid</div>
+            </div>
+          </div>
+
+          {/* Payment progress bar */}
+          <div style={{height:4,background:"var(--bg3)",borderRadius:2,overflow:"hidden",marginBottom:10}}>
+            <div style={{height:"100%",borderRadius:2,background:"var(--green)",width:total>0?(pc/total*100)+"%":"0%",transition:"width .3s"}}/>
+          </div>
+
+          {/* Per-person chips with paid status */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+            {exp.involved.map(pid=>{
+              const p=players.find(x=>x.PlayerID===pid);
+              if(!p)return null;
+              const share=Number((exp.shares||{})[pid]||0);
+              const paid=isPaid(exp.id,pid);
+              return <div key={pid} onClick={()=>togglePaid(exp.id,pid,share)}
+                style={{display:"flex",alignItems:"center",gap:5,padding:"5px 9px",borderRadius:8,cursor:"pointer",
+                  background:paid?"var(--gbg)":"var(--bg3)",border:paid?"1px solid var(--gborder)":"1px solid var(--border)",
+                  transition:"all .15s"}}>
+                <span style={{fontSize:12,fontWeight:500,color:paid?"var(--green)":"var(--text2)"}}>{p.Name.split(" ")[0]}</span>
+                <span style={{fontSize:11,fontFamily:"var(--mono)",color:paid?"var(--green)":"var(--accent)"}}>${share.toFixed(1)}</span>
+                {paid&&<span style={{fontSize:10,color:"var(--green)"}}>✓</span>}
+              </div>;
+            })}
+          </div>
+
+          <div style={{fontSize:11,color:"var(--text3)",marginBottom:10}}>Tap a name to mark paid/unpaid</div>
+
+          <div className="btn-row">
+            <button className="btn btn-ghost btn-sm" onClick={()=>setShowManage(exp)}>Send reminders</button>
+            <button className="btn btn-danger btn-sm" onClick={()=>deleteExpense(exp.id)}>Delete</button>
+          </div>
+        </div>
+      </div>;
+    })}
+
+    {/* ADD MODAL */}
+    {showAdd&&<Modal title="Add expense" onClose={()=>setShowAdd(false)} footer={
+      <><button className="btn btn-ghost" onClick={()=>setShowAdd(false)}>Cancel</button>
+      <button className="btn btn-primary" onClick={addExpense} disabled={!eForm.title||!eForm.amount||involved.length===0||saving}>{saving?"Saving…":"Add Expense"}</button></>
+    }>
+      <div className="form-group"><label className="form-label">What was it? *</label><input value={eForm.title} onChange={e=>setEForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Nets, Pizza, Drinks"/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Total ($) *</label><input type="number" min="0" value={eForm.amount} onChange={e=>setEForm(f=>({...f,amount:e.target.value}))} placeholder="0.00"/></div>
+        <div className="form-group"><label className="form-label">Date</label><input type="date" value={eForm.date} onChange={e=>setEForm(f=>({...f,date:e.target.value}))}/></div>
+      </div>
+      <div className="form-group"><label className="form-label">Note (optional)</label><input value={eForm.note} onChange={e=>setEForm(f=>({...f,note:e.target.value}))} placeholder="e.g. Post-match dinner"/></div>
+      <div className="form-group">
+        <label className="form-label">Who was involved? * ({involved.length} selected)</label>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:6,marginBottom:8}}>
+          <button className="btn btn-ghost btn-xs" onClick={()=>setInvolved(activePlayers.map(p=>p.PlayerID))}>All</button>
+          <button className="btn btn-ghost btn-xs" onClick={()=>setInvolved([])}>None</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+          {activePlayers.map(p=>{ const isIn=involved.includes(p.PlayerID); return <div key={p.PlayerID} onClick={()=>toggleInvolved(p.PlayerID)} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,cursor:"pointer",background:isIn?"var(--acbg)":"var(--bg3)",border:isIn?"1px solid var(--acborder)":"1px solid var(--border)"}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:isIn?"var(--accent)":"var(--bg4)",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"white"}}>{isIn?"✓":""}</div>
+            <span style={{fontSize:13,fontWeight:isIn?600:400}}>{p.Name.split(" ")[0]}</span>
+          </div>; })}
+        </div>
+      </div>
+      {involved.length>0&&eForm.amount&&<div className="form-group">
+        <label className="form-label">Custom amounts (leave blank for equal split)</label>
+        <div style={{fontSize:12,color:"var(--text2)",marginBottom:8}}>Equal share: ${(Number(eForm.amount)/involved.length).toFixed(1)} each</div>
+        {involved.map(pid=>{ const p=players.find(x=>x.PlayerID===pid); if(!p)return null;
+          return <div key={pid} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+            <span style={{flex:1,fontSize:13,fontWeight:500}}>{p.Name.split(" ")[0]}</span>
+            <span style={{fontSize:12,color:"var(--accent)",fontFamily:"var(--mono)",width:60,textAlign:"right"}}>${Number(previewShares[pid]||0).toFixed(1)}</span>
+            <input type="number" min="0" placeholder="Override" value={overrides[pid]||""} onChange={e=>setOverrides(o=>({...o,[pid]:e.target.value}))} style={{width:90,fontSize:13,padding:"5px 8px"}}/>
+          </div>; })}
+        <div style={{background:"var(--bg3)",borderRadius:8,padding:"9px 12px",marginTop:4,display:"flex",justifyContent:"space-between",fontSize:13}}>
+          <span style={{color:"var(--text2)"}}>Total allocated</span>
+          <span style={{fontWeight:600,fontFamily:"var(--mono)",color:Math.abs(Object.values(previewShares).reduce((s,v)=>s+v,0)-Number(eForm.amount))<0.2?"var(--green)":"var(--amber)"}}>
+            ${Number(Object.values(previewShares).reduce((s,v)=>s+v,0)).toFixed(1)} / ${Number(eForm.amount||0).toFixed(1)}
+          </span>
+        </div>
+      </div>}
+    </Modal>}
+
+    {/* MANAGE / SEND REMINDERS MODAL */}
+    {showManage&&<Modal title={showManage.title} onClose={()=>setShowManage(null)}>
+      <div style={{background:"var(--bg3)",borderRadius:8,padding:"10px 12px",marginBottom:14,fontSize:13,display:"flex",justifyContent:"space-between"}}>
+        <span style={{color:"var(--text2)"}}>Collected</span>
+        <span style={{fontWeight:600,fontFamily:"var(--mono)",color:"var(--green)"}}>${paidAmount(showManage).toFixed(1)} / ${Number(showManage.amount).toFixed(1)}</span>
+      </div>
+      <div style={{fontSize:12,color:"var(--text2)",marginBottom:12}}>Players who haven't paid yet. Tap to send a WhatsApp reminder.</div>
+      {showManage.involved.map(pid=>{
+        const p=players.find(x=>x.PlayerID===pid);
+        if(!p)return null;
+        const share=Number((showManage.shares||{})[pid]||0);
+        const paid=isPaid(showManage.id,pid);
+        const msg=buildMsg(showManage,pid);
+        return <div key={pid} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid var(--border)"}}>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:500,fontSize:14,color:paid?"var(--text3)":"var(--text)"}}>{p.Name}</div>
+            <div style={{fontSize:11,color:paid?"var(--green)":"var(--amber)",marginTop:1}}>{paid?"Paid":"Owes"} ${share.toFixed(1)}</div>
+          </div>
+          <button onClick={()=>togglePaid(showManage.id,pid,share)} className={"btn btn-sm "+(paid?"btn-ghost":"btn-primary")} style={{fontSize:11}}>
+            {paid?"Unmark":"Mark paid"}
+          </button>
+          {!paid&&p.Phone&&<a className="btn btn-wa btn-sm" href={waLink(p.Phone,msg)} target="_blank" style={{textDecoration:"none",fontSize:11}}>Remind</a>}
+        </div>;
+      })}
+    </Modal>}
+  </div>;
+}
+
+// ── MAIN APP ─────────────────────────────────────────────────────
+function App(){
+  const playerParam=urlP.get("player");
+  if(playerParam) return <PlayerAvailPage playerId={playerParam}/>;
+
+  const [view,setView]=useState("dashboard");
+  const [data,setData]=useState({players:[],matches:[],availability:{},payments:{},config:{}});
+  const [syncStatus,setSyncStatus]=useState("loading");
+  const [loading,setLoading]=useState(true);
+  const [toast,setToast]=useState(null);
+  const notify=msg=>setToast(msg);
+
+  const loadData=useCallback(async()=>{ setSyncStatus("loading"); try{const d=await api.get({action:"getAll"});setData(d);setSyncStatus("ok");}catch(e){console.error(e);setSyncStatus("err");}finally{setLoading(false);} },[]);
+  useEffect(()=>{loadData();},[loadData]);
+
+  if(loading) return <div className="loading-screen"><div className="spinner"/><div style={{color:"var(--text2)",fontSize:13}}>Loading from Google Sheets…</div></div>;
+
+  const navItems=[{id:"dashboard",icon:"◉",label:"Home"},{id:"players",icon:"👥",label:"Players"},{id:"matches",icon:"🏏",label:"Matches"},{id:"availability",icon:"✓",label:"Availability"},{id:"extras",icon:"🍕",label:"Extras"},{id:"finance",icon:"💰",label:"Finance"},{id:"settings",icon:"⚙",label:"Settings"}];
+  const views={dashboard:<Dashboard data={data}/>,players:<Players data={data} reload={loadData} notify={notify}/>,matches:<Matches data={data} reload={loadData} notify={notify}/>,availability:<Availability data={data} reload={loadData} notify={notify}/>,extras:<Extras data={data} reload={loadData} notify={notify}/>,finance:<Finance data={data} reload={loadData} notify={notify}/>,settings:<Settings data={data} reload={loadData} notify={notify}/>};
+
+  return <div className="app">
+    <nav className="bottom-nav">
+      <div className="nav-logo" style={{display:"none",padding:"12px 12px 14px",borderBottom:"1px solid var(--border)",marginBottom:6}}>
+        <div style={{fontSize:20,marginBottom:4}}>🏏</div>
+        <div style={{fontWeight:600,fontSize:13}}>{data.config?.ClubName||"MCC"}</div>
+        <div style={{fontSize:10,color:"var(--text3)",fontFamily:"var(--mono)"}}>{data.config?.SeasonName||"—"}</div>
+      </div>
+      {navItems.map(n=><button key={n.id} className={"nav-btn"+(view===n.id?" active":"")} onClick={()=>setView(n.id)}>
+        <span className="nav-icon">{n.icon}</span><span className="nav-label">{n.label}</span>
+      </button>)}
+    </nav>
+    <div className="app-main" style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",minWidth:0}}>
+      <header className="app-header">
+        <span style={{fontSize:20}}>🏏</span>
+        <div style={{flex:1}}><div className="app-title">{data.config?.ClubName||"MCC"} Cricket</div><div className="app-season">{data.config?.SeasonName||"—"}</div></div>
+        <div className={"sync-dot "+syncStatus}/>
+        <button className="btn btn-ghost btn-sm" onClick={loadData} style={{padding:"5px 10px",fontSize:16}}>↻</button>
+      </header>
+      <div className="app-content">{views[view]}</div>
+    </div>
+    {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
